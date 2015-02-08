@@ -8,9 +8,11 @@
                  [cheshire "5.3.1"]
                  [compojure "1.1.9"]
                  [hiccup-foundation "0.1.0"]
-                 [clj-http "1.0.0"]] 
+                 [clj-http "1.0.0"]
+                 [http-kit "2.1.16"]
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
   :plugins [[lein-ring "0.8.12"]]
   :ring {:handler prosper.handler/app}
-  :profiles
-  {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
-                        [ring-mock "0.1.5"]]}})
+  :profiles {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
+                                  [ring-mock "0.1.5"]]}}
+  :main prosper.core)
