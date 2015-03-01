@@ -6,8 +6,7 @@
 (defn parse-collection
   [args]
   (case (first args)
-    "-d" (collection/query-and-store (read-string (second args)) 333)
-    "-h" (collection/store-listings-historical)))
+    "-d" (collection/query-and-store (read-string (second args)) 333)))
 
 (defn -main
   [& args]

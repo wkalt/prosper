@@ -25,7 +25,7 @@
         (apply jdbcd/create-table-ddl :numeric
                (cons ["listing_number" "bigint UNIQUE PRIMARY KEY NOT NULL"]
                      (seq (zipmap (map name numeric-fields)
-                                  (repeat (count numeric-fields) "integer"))))))
+                                  (repeat (count numeric-fields) "double precision"))))))
 
       (jdbcd/do-commands
         (apply jdbcd/create-table-ddl :character

@@ -4,9 +4,7 @@ A clojure service for investing on Prosper.com
 
 - TODO:
 
-- data collection
-
-- client API
+- web interface
 - benchmark / tracking
 - testing
 - simulated service / replay

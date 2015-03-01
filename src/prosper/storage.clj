@@ -54,20 +54,18 @@
    (jdbc/with-db-transaction [connection postgres-db]
      (let [new-entries (map :ListingNumber listings)
            existing-entries (existent-entries "numeric" "listing_number" new-entries)
-           entries-to-store (set/difference (set new-entries) (set existing-entries))]
-
+           entries-to-store (set/difference (set new-entries) (set existing-entries))
+           listings-for-storage (->> listings
+                                     (filter (comp entries-to-store :ListingNumber))
+                                     (map #(set/rename-keys % {:ListingNumber :listing_number})))]
 
        (apply (partial jdbcd/insert-records :numeric)
-              (->> listings
-                   (filter (comp entries-to-store :ListingNumber))
-                   (map #(select-keys % numeric-fields))
-                   (map #(set/rename-keys % {:ListingNumber :listing_number}))))
+              (->> listings-for-storage
+                   (map #(select-keys % numeric-fields))))
 
        (apply (partial jdbcd/insert-records :character)
-              (->> listings
-                   (filter (comp entries-to-store :ListingNumber))
-                   (map #(select-keys % character-fields))
-                   (map #(set/rename-keys % {:ListingNumber :listing_number}))))
+              (->> listings-for-storage
+                   (map #(select-keys % character-fields))))
 
        (when store-events?
          (store-events! listings))))))
