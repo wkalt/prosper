@@ -1,6 +1,11 @@
 (ns prosper.migrate
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.java.jdbc.deprecated :as jdbcd]
+            [clj-time.core :refer [now]]
+            [clojure.set :refer [difference]]
+            [clj-time.coerce :refer [to-timestamp]]
+            [clojure.tools.logging :as log]
+            [prosper.fields :refer [fields]]
             [prosper.query :as q]))
 
 (def postgres-db {:subprotocol "postgresql"
@@ -8,49 +13,93 @@
                   :user "prosper"
                   :password "prosper"})
 
-(def listings (first (q/query-get "Listings")))
-
-(def numeric-fields
-  (into #{} (keys (filter #(number? (val %)) listings))))
-
-(def character-fields
-  (into #{} (keys (filter #(string? (val %)) listings))))
-
 (defn initial-migration
   []
   (jdbcd/with-connection postgres-db
     (try
-
       (jdbcd/do-commands
         (apply jdbcd/create-table-ddl :numeric
-               (cons ["listing_number" "bigint UNIQUE PRIMARY KEY NOT NULL"]
-                     (seq (zipmap (map name numeric-fields)
-                                  (repeat (count numeric-fields) "double precision"))))))
+               (seq (zipmap (map name numeric-fields)
+                            (repeat (count numeric-fields) "double precision")))))
 
       (jdbcd/do-commands
         (apply jdbcd/create-table-ddl :character
-               (cons ["listing_number"
-                      "bigint unique primary key references numeric(listing_number)"]
-                     (seq (zipmap (map name character-fields)
-                                  (repeat (count character-fields) "VARCHAR(120)"))))))
+               (seq (zipmap (map name character-fields)
+                            (repeat (count character-fields) "VARCHAR(120)")))))
 
       (jdbcd/do-commands
         "CREATE SEQUENCE entry_id_seq CYCLE")
 
       (jdbcd/create-table :entries
                           ["entry_id" "bigint NOT NULL PRIMARY KEY DEFAULT nextval('entry_id_seq')"]
-                          ["listing_number" "bigint references numeric(listing_number)"]
+                          ["listingnumber" "double precision references numeric(listingnumber)"]
                           ["timestamp" "TIMESTAMP WITH TIME ZONE"]
                           ["amount_remaining" "integer"]
                           ["amount_participation" "integer"]
                           ["listing_amount_funded" "integer"])
 
+      (jdbcd/create-table :migrations
+                          ["migration" "integer not null primary key"]
+                          ["time" "timestamp not null"])
+
 
       (catch Exception e (.getNextException e)))))
 
-(defn migrate!
+(def migrations
+  {1 initial-migration})
+
+(defn record-migration!
+  [migration]
+  {:pre [(integer? migration)]}
+  (jdbcd/do-prepared
+   "INSERT INTO migrations (migration, time) VALUES (?, ?)"
+   [migration (to-timestamp (now))]))
+
+(defn applied-migrations
   []
-  (do
-    (initial-migration)))
+  {:post  [(sorted? %)
+           (set? %)
+           (apply < 0 %)]}
+  (try
+    (let [query   "SELECT version FROM migrations ORDER BY version"
+          results (jdbcd/transaction (jdbc/query postgres-db query))]
+      (apply sorted-set (map :version results)))
+    (catch java.sql.SQLException e
+      (sorted-set))))
+
+(defn pending-migrations
+  []
+  {:post [(map? %)
+          (sorted? %)
+          (apply < 0 (keys %))
+          (<= (count %) (count migrations))]}
+  (let [pending (difference (set (keys migrations)) (applied-migrations))]
+    (into (sorted-map)
+          (select-keys migrations pending))))
+
+(defn migrate!
+  "Migrates database to the latest schema version. Does nothing if database is
+   already at the latest schema version."
+  []
+  (jdbcd/with-connection postgres-db
+    (if-let [unexpected (first (difference (applied-migrations) (set (keys migrations))))]
+      (throw (IllegalStateException.
+               (format "Your database contains an unrecognized schema migration numbered %d."
+                       unexpected))))
+
+    (if-let [pending (seq (pending-migrations))]
+      (jdbcd/transaction
+        (doseq [[version migration] pending]
+          (log/info (format "Applying database migration version %d" version))
+          (try
+            (migration)
+            (record-migration! version)
+            (catch java.sql.SQLException e
+              (log/error e "Caught SQLException during migration")
+              (let [next (.getNextException e)]
+                (when-not (nil? next)
+                  (log/error next "Unravelled exception")))
+              (System/exit 1)))))
+      (log/info "There are no pending migrations"))))
 
 #_ (migrate!)

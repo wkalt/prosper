@@ -1,5 +1,6 @@
 (ns prosper.core
-  (:require [prosper.collection :as collection]))
+  (:require [prosper.collection :as collection]
+            [prosper.migrate :as migrate]))
 
 (def ns-prefix "prosper")
 
@@ -11,5 +12,6 @@
 (defn -main
   [& args]
   (case (first args)
-    "collection" (parse-collection (rest args)))
+    "collection" (parse-collection (rest args))
+    "migrate" (migrate/migrate!))
   (System/exit 0))

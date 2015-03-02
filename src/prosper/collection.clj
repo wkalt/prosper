@@ -1,5 +1,6 @@
 (ns prosper.collection
   (:require [prosper.query :as query]
+            [clojure.tools.logging :as log]
             [clj-time.core :refer [now plus secs after?]]
             [clojure.java.jdbc.deprecated :as jdbcd]
             [prosper.storage :as storage]
@@ -19,6 +20,10 @@
         listing-ch (as/chan 500)
         listing-depth (atom 0)
         end-time (plus (now) (secs duration))]
+
+    (log/info
+      (format "Starting query run of %s seconds at interval %s ms."
+              duration interval))
 
     (as/thread
       (pmap
