@@ -7,13 +7,6 @@
             [clojure.tools.logging :as log]
             [prosper.query :as q]))
 
-(def listings (first (q/query-get "Listings")))
-
-(count listings)
-(first listings)
-
-(map (fn [x] (first x) (type (second x))) listings)
-
 (def fields
 {:RTL005 "integer"
  :ChannelCode "varchar(120)"
@@ -21,7 +14,6 @@
  :CreditPullDate "timestamp with time zone"
  :ALL906 "integer"
  :REV905 "integer"
- :ListingNumber "integer"
  :BorrowerListingDescription "varchar(240)"
  :ILN908 "integer"
  :REV077 "integer"
@@ -34,7 +26,7 @@
  :ALL144 "integer"
  :ALE905 "integer"
  :REV201 "integer"
- :WholeLoanStartDate nil
+ :WholeLoanStartDate "timestamp with time zone"
  :ALL136 "integer"
  :REV002 "integer"
  :RTR590 "integer"
@@ -112,7 +104,7 @@
  :BAC752 "integer"
  :TotalInquiries "integer"
  :BAC302 "integer"
- :LoanNumber nil
+ :LoanNumber "timestamp with time zone"
  :BAC084 "integer"
  :IncomeVerifiable "boolean"
  :ALE022 "integer"
@@ -156,9 +148,9 @@
 :ProsperScore "integer"
 :ALL128 "integer"
 :ALL152 "integer"
-:PriorProsperLoansLateCycles nil
+:PriorProsperLoansLateCycles "timestamp with time zone"
 :REV006 "integer"
-:MaxPriorProsperLoan nil
+:MaxPriorProsperLoan "timestamp with time zone"
 :ALL145 "integer"
 :RTL080 "integer"
 :ALL141 "integer"
@@ -181,7 +173,7 @@
 :ILN116 "integer"
 :REP001 "integer"
 :REP078 "integer"
-:LoanOriginationDate nil
+:LoanOriginationDate "timestamp with time zone"
 :ALL078 "integer"
 :PercentFunded "double precision"
 :REV105 "integer"
@@ -211,9 +203,9 @@
 :CurrentCreditLines "integer"
 :ILN104 "integer"
 :ILN129 "integer"
-:PriorProsperLoansPrincipalBorrowed nil
+:PriorProsperLoansPrincipalBorrowed "integer"
 :ALE023 "integer"
-:PriorProsperLoanEarliestPayOff nil
+:PriorProsperLoanEarliestPayOff "integer"
 :ALE002 "integer"
 :ALL071 "integer"
 :ILN111 "integer"
@@ -246,7 +238,7 @@
 :ALL077 "integer"
 :BAC401 "integer"
 :IncomeRangeDescription "varchar(100)"
-:PriorProsperLoansOnTimePayments nil
+:PriorProsperLoansOnTimePayments "integer"
 :Occupation "varchar(100)"
 :DTIwProsperLoan "double precision"
 :OpenCreditLines "integer"
@@ -335,7 +327,7 @@
 :REV071 "integer"
 :ILN071 "integer"
 :ALL803 "integer"
-:PriorProsperLoans61DPD nil
+:PriorProsperLoans61DPD "integer"
 :ALL806 "integer"
 :RTL901 "integer"
 :RTR303 "integer"
@@ -372,7 +364,7 @@
 :ALE904 "integer"
 :BAC589 "integer"
 :ALL702 "integer"
-:PriorProsperLoansBalanceOutstanding nil
+:PriorProsperLoansBalanceOutstanding "double precision"
 :LenderIndicator "integer"
 :ILN740 "integer"
 :CreditLinesLast7Years "integer"
@@ -441,7 +433,7 @@
 :LFI801 "integer"
 :ALL109 "integer"
 :ILN101 "integer"
-:PriorProsperLoansLatePaymentsOneMonthPlus nil
+:PriorProsperLoansLatePaymentsOneMonthPlus "integer"
 :ALL602 "integer"
 :MonthsEmployed "integer"
 :ILN301 "integer"
@@ -472,7 +464,7 @@
 :REV403 "integer"
 :AUT001 "integer"
 :ILN914 "integer"
-:ScoreXChange nil
+:ScoreXChange "varchar(10)"
 :REV751 "integer"
 :ALL807 "integer"
 :ALE903 "integer"
@@ -491,7 +483,7 @@
 :ILN601 "integer"
 :TotalTradeItems "integer"
 :ILN114 "integer"
-:PriorProsperLoansCyclesBilled nil
+:PriorProsperLoansCyclesBilled "integer"
 :PublicRecordsLast12Months "integer"
 :RTR752 "integer"
 :REP075 "integer"
@@ -517,7 +509,7 @@
 :BAC076 "integer"
 :MemberKey "varchar(120)"
 :ALL067 "integer"
-:MinPriorProsperLoan nil
+:MinPriorProsperLoan "double precision"
 :REV301 "integer"
 :FirstRecordedCreditLine "timestamp with time zone"
 :RTR007 "integer"
@@ -541,12 +533,12 @@
 :BAC503 "integer"
 :ILN124 "integer"
 :ALE076 "integer"
-:WholeLoanEndDate nil
+:WholeLoanEndDate "timestamp with time zone"
 :REV024 "integer"
 :ScoreX "varchar(120)"
 :GroupName "varchar(120)"
 :REV302 "integer"
-:ListingEndDate nil
+:ListingEndDate "timestamp with time zone"
 :REV601 "integer"
 :ALL108 "integer"
 :ALL091 "integer"
@@ -555,8 +547,8 @@
 :REV113 "integer"
 :RTR601 "integer"
 :REV501 "integer"
-:PriorProsperLoans31DPD nil
+:PriorProsperLoans31DPD "integer"
 :RTR081 "integer"
 :REV086 "integer"
-:PriorProsperLoansPrincipalOutstanding nil
+:PriorProsperLoansPrincipalOutstanding "double precision"
 :ALL052 "integer"})

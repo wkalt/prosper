@@ -48,5 +48,6 @@
 
     (while (not (zero? @listing-depth))
       (Thread/sleep 500)) ;; sleep half secs until listings drain
+
     (as/close! future-ch)
     (as/close! listing-ch)))

@@ -6,6 +6,7 @@
             [clj-time.coerce :refer [to-timestamp]]
             [clojure.tools.logging :as log]
             [prosper.fields :refer [fields]]
+            [clojure.walk :refer [stringify-keys]]
             [prosper.query :as q]))
 
 (def postgres-db {:subprotocol "postgresql"
@@ -13,26 +14,29 @@
                   :user "prosper"
                   :password "prosper"})
 
+(def numeric-fields
+  (into {} (filter (comp #(or (= "integer" %) (= "double precision" %)) val) fields)))
+
+(def character-fields
+  (select-keys fields (into [] (remove (set (keys numeric-fields)) (keys fields)))))
+
 (defn initial-migration
   []
   (jdbcd/with-connection postgres-db
-    (try
       (jdbcd/do-commands
         (apply jdbcd/create-table-ddl :numeric
-               (seq (zipmap (map name numeric-fields)
-                            (repeat (count numeric-fields) "double precision")))))
-
+               (seq (stringify-keys (assoc numeric-fields
+                                      "listingnumber" "bigint not null primary key")))))
       (jdbcd/do-commands
         (apply jdbcd/create-table-ddl :character
-               (seq (zipmap (map name character-fields)
-                            (repeat (count character-fields) "VARCHAR(120)")))))
-
+               (seq (stringify-keys (assoc  character-fields
+                                      "listingnumber" "bigint references numeric(listingnumber)")))))
       (jdbcd/do-commands
         "CREATE SEQUENCE entry_id_seq CYCLE")
 
       (jdbcd/create-table :entries
                           ["entry_id" "bigint NOT NULL PRIMARY KEY DEFAULT nextval('entry_id_seq')"]
-                          ["listingnumber" "double precision references numeric(listingnumber)"]
+                          ["listingnumber" "bigint references numeric(listingnumber)"]
                           ["timestamp" "TIMESTAMP WITH TIME ZONE"]
                           ["amount_remaining" "integer"]
                           ["amount_participation" "integer"]
@@ -40,10 +44,7 @@
 
       (jdbcd/create-table :migrations
                           ["migration" "integer not null primary key"]
-                          ["time" "timestamp not null"])
-
-
-      (catch Exception e (.getNextException e)))))
+                          ["time" "timestamp not null"])))
 
 (def migrations
   {1 initial-migration})
@@ -61,9 +62,9 @@
            (set? %)
            (apply < 0 %)]}
   (try
-    (let [query   "SELECT version FROM migrations ORDER BY version"
+    (let [query   "SELECT migration FROM migrations ORDER BY migration"
           results (jdbcd/transaction (jdbc/query postgres-db query))]
-      (apply sorted-set (map :version results)))
+      (apply sorted-set (map :migration results)))
     (catch java.sql.SQLException e
       (sorted-set))))
 
@@ -73,9 +74,13 @@
           (sorted? %)
           (apply < 0 (keys %))
           (<= (count %) (count migrations))]}
-  (let [pending (difference (set (keys migrations)) (applied-migrations))]
-    (into (sorted-map)
-          (select-keys migrations pending))))
+  (try (let [pending (remove (applied-migrations) (set (keys migrations)))]
+         (into (sorted-map)
+               (select-keys migrations pending)))
+       (catch Exception e (into (sorted-map) migrations))))
+
+
+(jdbcd/with-connection postgres-db (pending-migrations))
 
 (defn migrate!
   "Migrates database to the latest schema version. Does nothing if database is
