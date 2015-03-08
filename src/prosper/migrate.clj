@@ -15,7 +15,9 @@
                   :password "prosper"})
 
 (def numeric-fields
-  (into {} (filter (comp #(or (= "integer" %) (= "double precision" %)) val) fields)))
+  (into {} (filter (comp #(or (= "integer" %)
+                              (= "double precision" %)) val)
+                   fields)))
 
 (def character-fields
   (select-keys fields (into [] (remove (set (keys numeric-fields)) (keys fields)))))
@@ -23,28 +25,32 @@
 (defn initial-migration
   []
   (jdbcd/with-connection postgres-db
-      (jdbcd/do-commands
-        (apply jdbcd/create-table-ddl :numeric
-               (seq (stringify-keys (assoc numeric-fields
-                                      "listingnumber" "bigint not null primary key")))))
-      (jdbcd/do-commands
-        (apply jdbcd/create-table-ddl :character
-               (seq (stringify-keys (assoc  character-fields
-                                      "listingnumber" "bigint references numeric(listingnumber)")))))
-      (jdbcd/do-commands
-        "CREATE SEQUENCE entry_id_seq CYCLE")
+    (jdbcd/do-commands
+      (apply jdbcd/create-table-ddl :numeric
+             (seq (stringify-keys (assoc numeric-fields
+                                    "listingnumber" "bigint not null primary key")))))
+    (jdbcd/do-commands
+      (apply jdbcd/create-table-ddl
+             :character
+             (seq (stringify-keys
+                    (assoc  character-fields
+                      "listingnumber" "bigint references numeric(listingnumber)")))))
+    (jdbcd/do-commands
+      "CREATE SEQUENCE entry_id_seq CYCLE")
 
-      (jdbcd/create-table :entries
-                          ["entry_id" "bigint NOT NULL PRIMARY KEY DEFAULT nextval('entry_id_seq')"]
-                          ["listingnumber" "bigint references numeric(listingnumber)"]
-                          ["timestamp" "TIMESTAMP WITH TIME ZONE"]
-                          ["amount_remaining" "integer"]
-                          ["amount_participation" "integer"]
-                          ["listing_amount_funded" "integer"])
+    (jdbcd/create-table
+      :entries
+      ["entry_id" "bigint NOT NULL PRIMARY KEY DEFAULT nextval('entry_id_seq')"]
+      ["listingnumber" "bigint references numeric(listingnumber)"]
+      ["timestamp" "TIMESTAMP WITH TIME ZONE"]
+      ["amount_remaining" "integer"]
+      ["amount_participation" "integer"]
+      ["listing_amount_funded" "integer"])
 
-      (jdbcd/create-table :migrations
-                          ["migration" "integer not null primary key"]
-                          ["time" "timestamp not null"])))
+    (jdbcd/create-table
+      :migrations
+      ["migration" "integer not null primary key"]
+      ["time" "timestamp not null"])))
 
 (def migrations
   {1 initial-migration})
@@ -53,8 +59,8 @@
   [migration]
   {:pre [(integer? migration)]}
   (jdbcd/do-prepared
-   "INSERT INTO migrations (migration, time) VALUES (?, ?)"
-   [migration (to-timestamp (now))]))
+    "INSERT INTO migrations (migration, time) VALUES (?, ?)"
+    [migration (to-timestamp (now))]))
 
 (defn applied-migrations
   []
