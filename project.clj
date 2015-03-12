@@ -3,6 +3,7 @@
   :url "http://example.com/FIXME"
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.6.0"]
+                 [ch.qos.logback/logback-classic "1.1.2"]
                  [org.clojure/java.jdbc "0.3.6"]
                  [org.postgresql/postgresql "9.4-1200-jdbc41"]
                  [cheshire "5.3.1"]
