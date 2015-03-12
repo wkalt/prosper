@@ -112,5 +112,3 @@
                   (log/error next "Unravelled exception")))
               (System/exit 1)))))
       (log/info "There are no pending migrations"))))
-
-#_ (migrate!)

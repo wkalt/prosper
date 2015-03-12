@@ -33,7 +33,8 @@
                 :amount_remaining AmountRemaining
                 :amount_participation AmountParticipation
                 :listing_amount_funded ListingAmountFunded
-                :listingnumber ListingNumber}) listings))))
+                :listingnumber ListingNumber}) listings))
+    (log/info "stored events")))
 
 (defn entry-exists?
   [table column value]
@@ -67,5 +68,6 @@
               (->> listings-for-storage
                    (map #(select-keys % (cons :ListingNumber character-fields)))))
 
+       (log/info "stored listings")
        (when store-events?
          (store-events! listings))))))
