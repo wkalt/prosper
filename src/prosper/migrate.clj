@@ -5,7 +5,7 @@
             [clojure.set :refer [difference]]
             [clj-time.coerce :refer [to-timestamp]]
             [clojure.tools.logging :as log]
-            [prosper.fields :refer [fields]]
+            [prosper.fields :refer [numeric-fields character-fields]]
             [clojure.walk :refer [stringify-keys]]
             [prosper.query :as q]))
 
@@ -13,14 +13,6 @@
                   :subname "//localhost:5432/prosper"
                   :user "prosper"
                   :password "prosper"})
-
-(def numeric-fields
-  (into {} (filter (comp #(or (= "integer" %)
-                              (= "double precision" %)) val)
-                   fields)))
-
-(def character-fields
-  (select-keys fields (into [] (remove (set (keys numeric-fields)) (keys fields)))))
 
 (defn initial-migration
   []

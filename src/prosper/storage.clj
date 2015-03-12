@@ -7,20 +7,13 @@
             [clojure.set :as set]
             [clojure.string :as string]
             [prosper.query :as q]
+            [prosper.fields :refer [numeric-fields character-fields]]
             [clj-time.coerce :refer [to-timestamp]]))
 
 (def postgres-db {:subprotocol "postgresql"
                   :subname "//localhost:5432/prosper"
                   :user "prosper"
                   :password "prosper"})
-
-(def listings (first (q/query-get "Listings")))
-
-(def numeric-fields
-  (into #{} (keys (filter #(number? (val %)) listings))))
-
-(def character-fields
-  (into #{} (keys (filter #(string? (val %)) listings))))
 
 (defn store-events!
   [listings]

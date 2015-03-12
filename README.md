@@ -2,16 +2,22 @@
 
 A clojure service for investing on Prosper.com
 
-- TODO:
+**TODO**:
 
 - web interface
-- benchmark / tracking
+- benchmark
 - testing
 - simulated service / replay
 - selection model
+- ec2 (do) interop
+
+**DONE**:
+
 - postgres database
 - logging
-- ec2 (do) interop
+- storage
+- tracking
+
 
 ## Prerequisites
 
