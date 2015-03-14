@@ -7,16 +7,12 @@
             [clojure.tools.logging :as log]
             [prosper.fields :refer [numeric-fields character-fields]]
             [clojure.walk :refer [stringify-keys]]
+            [prosper.config :refer [db]]
             [prosper.query :as q]))
-
-(def postgres-db {:subprotocol "postgresql"
-                  :subname "//localhost:5432/prosper"
-                  :user "prosper"
-                  :password "prosper"})
 
 (defn initial-migration
   []
-  (jdbcd/with-connection postgres-db
+  (jdbcd/with-connection db
     (jdbcd/do-commands
       (apply jdbcd/create-table-ddl :numeric
              (seq (stringify-keys (assoc numeric-fields
@@ -61,7 +57,7 @@
            (apply < 0 %)]}
   (try
     (let [query   "SELECT migration FROM migrations ORDER BY migration"
-          results (jdbcd/transaction (jdbc/query postgres-db query))]
+          results (jdbcd/transaction (jdbc/query db query))]
       (apply sorted-set (map :migration results)))
     (catch java.sql.SQLException e
       (sorted-set))))
@@ -78,13 +74,13 @@
        (catch Exception e (into (sorted-map) migrations))))
 
 
-(jdbcd/with-connection postgres-db (pending-migrations))
+(jdbcd/with-connection db (pending-migrations))
 
 (defn migrate!
   "Migrates database to the latest schema version. Does nothing if database is
    already at the latest schema version."
   []
-  (jdbcd/with-connection postgres-db
+  (jdbcd/with-connection db
     (if-let [unexpected (first (difference (applied-migrations) (set (keys migrations))))]
       (throw (IllegalStateException.
                (format "Your database contains an unrecognized schema migration numbered %d."

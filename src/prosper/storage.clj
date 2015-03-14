@@ -8,12 +8,8 @@
             [clojure.string :as string]
             [prosper.query :as q]
             [prosper.fields :refer [numeric-fields character-fields]]
+            [prosper.config :refer [db]]
             [clj-time.coerce :refer [to-timestamp]]))
-
-(def postgres-db {:subprotocol "postgresql"
-                  :subname "//localhost:5432/prosper"
-                  :user "prosper"
-                  :password "prosper"})
 
 (defn store-events!
   [listings]
@@ -33,20 +29,20 @@
   [table column value]
   (let [query (format "select 1 where exists (select 1 from %s where %s = %s)"
                       table column value)]
-  (not (empty? (jdbc/query postgres-db query)))))
+  (not (empty? (jdbc/query db query)))))
 
 (defn existent-entries
   [table column values]
   (let [query (format "select %s from %s where %s in (%s)"
                       column table column (string/join "," values))]
-    (map :listingnumber (jdbc/query postgres-db query))))
+    (map :listingnumber (jdbc/query db query))))
 
 (defn store-listings!
   "must be called within a db connection"
   ([listings]
    (store-listings! listings true))
   ([listings store-events?]
-   (jdbc/with-db-transaction [connection postgres-db]
+   (jdbc/with-db-transaction [connection db]
      (let [new-entries (map :ListingNumber listings)
            existing-entries (existent-entries "numeric" "listingnumber" new-entries)
            entries-to-store (set/difference (set new-entries) (set existing-entries))
