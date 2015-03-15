@@ -11,6 +11,7 @@
 * start running collection in production
 * make db connection handling more efficient
 * create a way to start and stop querying and the service itself
+* convert to a trapper keeper service
 
 ## phase 2
 * web interface / investment tracking / reporting
