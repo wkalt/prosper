@@ -24,7 +24,7 @@
             (while true
               (storage/store-listings! *db* (as/<!! listing-ch))
               (swap! listing-depth dec))))
-        (range 8)))
+        (range (.availableProcessors (Runtime/getRuntime)))))
 
     (as/thread
       (while true
