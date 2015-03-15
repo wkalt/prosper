@@ -25,11 +25,6 @@ password = <your prosper password>
 psql -c 'create role prosper with login database'
 psql -c 'create database prosper owner prosper'
 
-* migrate to the latest database schema:
+* run it
+lein tk
 
-lein run migrate -c config.ini
-
-
-* run collection to test that things worked:
-
-lein run collection -c config.ini -d 10
