@@ -7,7 +7,7 @@
             [clojure.java.jdbc.deprecated :as jdbcd]
             [prosper.storage :as storage]
             [clojure.java.jdbc :as jdbc]
-            [prosper.config :refer [*db*]]
+            [prosper.config :refer [*db* *release-rate* *base-rate*]]
             [clojure.core.async :as as]))
 
 (defn release-times
@@ -53,7 +53,7 @@
     (log/info "registered listing consumer")
 
     (while true
-      (Thread/sleep (if (in-release?) 333 60000))
+      (Thread/sleep (if (in-release?) *release-rate* *base-rate*))
       (let [result (query/kit-get "Listings")]
         (as/>!! future-ch result))
       (swap! future-depth inc))))

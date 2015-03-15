@@ -84,9 +84,10 @@
       (if-let [unexpected (-> (applied-migrations db)
                               (difference (set (keys migrations)))
                               first)]
-        (-> "Your database contains an unrecognized migration numbered %d."
+        (-> "Your database contains an unrecognized migration numbered %s."
             (format unexpected)
-            (comp throw IllegalStateException.)))
+            IllegalStateException.
+            throw))
 
       (if-let [pending (seq (pending-migrations db))]
         (jdbcd/transaction
