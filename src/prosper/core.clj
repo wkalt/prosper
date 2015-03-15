@@ -24,7 +24,11 @@
   [& args]
   (let [cli-map (validate-cli-args args)
         config-map (config/load-config (get cli-map "-c"))]
-      (case (first args)
-        "collection" (collection/query-and-store (read-string (get cli-map "-d")) 333)
-        "migrate" (migrate/migrate!))
-      (System/exit 0)))
+    (case (first args)
+      "collection" (collection/query-and-store
+                     (read-string (get cli-map "-d"))
+                     (if (get cli-map "-i")
+                       (read-string (get cli-map "-i"))
+                       333)) ;; if no interval is supplied, default to 3x/sec
+      "migrate" (migrate/migrate!))
+    (System/exit 0)))
