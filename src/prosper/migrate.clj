@@ -14,14 +14,17 @@
   []
   (jdbcd/do-commands
     (apply jdbcd/create-table-ddl :numeric
-           (seq (stringify-keys (assoc numeric-fields
-                                  "listingnumber" "bigint not null primary key")))))
+           (-> numeric-fields
+               (assoc "listingnumber" "bigint not null primary key")
+               stringify-keys
+               seq)))
   (jdbcd/do-commands
     (apply jdbcd/create-table-ddl
            :character
-           (seq (stringify-keys
-                  (assoc  character-fields
-                    "listingnumber" "bigint references numeric(listingnumber)")))))
+           (-> character-fields
+               (assoc "listingnumber" "bigint references numeric(listingnumber)")
+               stringify-keys
+               seq)))
   (jdbcd/do-commands
     "CREATE SEQUENCE entry_id_seq CYCLE")
 
@@ -78,10 +81,12 @@
   []
   (let [db (:database *config*)]
     (jdbcd/with-connection db
-      (if-let [unexpected (first (difference (applied-migrations db) (set (keys migrations))))]
-        (throw (IllegalStateException.
-                 (format "Your database contains an unrecognized schema migration numbered %d."
-                         unexpected))))
+      (if-let [unexpected (-> (applied-migrations db)
+                              (difference (set (keys migrations)))
+                              first)]
+        (-> "Your database contains an unrecognized migration numbered %d."
+            (format unexpected)
+            (comp throw IllegalStateException.)))
 
       (if-let [pending (seq (pending-migrations db))]
         (jdbcd/transaction

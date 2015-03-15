@@ -24,7 +24,6 @@
 
 (defn create-listing-consumer-watch
   [listing-ch]
-  (log/info "registering listing consumer")
   (fn [key atom old-state new-state]
     (when (< old-state new-state)
       (jdbcd/with-connection *db*
@@ -33,7 +32,6 @@
 
 (defn create-future-consumer-watch
   [future-ch listing-depth listing-ch]
-  (log/info "registering future consumer")
   (fn [key atom old-state new-state]
     (when (< old-state new-state)
       (as/>!! listing-ch (query/parse-body @(as/<!! future-ch)))
@@ -49,12 +47,13 @@
 
     (add-watch future-depth :future-consumer
                (create-future-consumer-watch future-ch listing-depth listing-ch))
+    (log/info "registered future consumer")
     (add-watch listing-depth :listing-consumer
                (create-listing-consumer-watch listing-ch))
+    (log/info "registered listing consumer")
 
     (while true
-      (let [interval (if (in-release?) 333 60000)]
-        (Thread/sleep interval)
-        (let [result (query/kit-get "Listings")]
-          (as/>!! future-ch result))
-        (swap! future-depth inc)))))
+      (Thread/sleep (if (in-release?) 333 60000))
+      (let [result (query/kit-get "Listings")]
+        (as/>!! future-ch result))
+      (swap! future-depth inc))))
