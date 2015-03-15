@@ -26,7 +26,7 @@
     "CREATE SEQUENCE entry_id_seq CYCLE")
 
   (jdbcd/create-table
-    :entries
+    :events
     ["entry_id" "bigint NOT NULL PRIMARY KEY DEFAULT nextval('entry_id_seq')"]
     ["listingnumber" "bigint references numeric(listingnumber)"]
     ["timestamp" "TIMESTAMP WITH TIME ZONE"]

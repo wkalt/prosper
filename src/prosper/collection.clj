@@ -15,13 +15,10 @@
         listing-ch (as/chan 500)
         listing-depth (atom 0)
         end-time (plus (now) (secs duration))]
-
-    (log/info
-      (format "Starting query run of %s seconds at interval %s ms."
-              duration interval))
-
+    (log/info (format "Starting query run of %s seconds at interval %s ms."
+                      duration interval))
     (as/thread
-      (pmap
+      (pmap ;; TODO this should probably be tightened up
         (fn [x]
           (jdbcd/with-connection *db*
             (while true
