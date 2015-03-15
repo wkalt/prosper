@@ -53,10 +53,9 @@
            listings-to-store (->> listings
                                   (filter (comp events-to-store :ListingNumber)))]
        (if (empty? listings-to-store)
-         (log/info "No new listings to store.")
-         (do
-           (store-listings listings-to-store)
-           (log/info (format "stored %s new listings"
-                             (count listings-to-store)))))
+         (log/info "no new listings")
+         (do (store-listings listings-to-store)
+             (log/info (format "stored %s new listings"
+                               (count listings-to-store)))))
        (when store-events?
          (store-events! listings))))))

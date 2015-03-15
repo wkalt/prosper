@@ -1,6 +1,7 @@
 **TODO**:
 
 ## phase 1
+* can we store new events more efficiently? things don't change often
 * input schema validation
 * tests
 * automated package testing
