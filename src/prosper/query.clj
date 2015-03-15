@@ -1,10 +1,9 @@
 (ns prosper.query
   (:require [clj-http.client :as http]
             [org.httpkit.client :as kit]
+            [prosper.config :refer [*user* *pw*]]
             [cheshire.core :as json]))
 
-(def user "snoop_user@gmail.com")
-(def pw "pass_for_snoops")
 (def base-url "https://api.prosper.com/api/")
 
 (def op-map {">=" "ge"
@@ -45,11 +44,11 @@
 
 (defn wrap-with-http
   [query-string]
-  (http/get query-string {:accept :json :basic-auth [user pw]}))
+  (http/get query-string {:accept :json :basic-auth [*user* *pw*]}))
 
 (defn kit-wrap
   [query-string]
-  (kit/get query-string {:accept :json :basic-auth [user pw]}))
+  (kit/get query-string {:accept :json :basic-auth [*user* *pw*]}))
 
 (defn kit-get
   ([endpoint]

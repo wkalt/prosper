@@ -8,7 +8,6 @@
             [clojure.string :as string]
             [prosper.query :as q]
             [prosper.fields :refer [numeric-fields character-fields]]
-            [prosper.config :refer [db]]
             [clj-time.coerce :refer [to-timestamp]]))
 
 (defn store-events!
@@ -25,37 +24,31 @@
                 :listingnumber ListingNumber}) listings))
     (log/info "stored events")))
 
-(defn entry-exists?
-  [table column value]
-  (let [query (format "select 1 where exists (select 1 from %s where %s = %s)"
-                      table column value)]
-  (not (empty? (jdbc/query db query)))))
-
 (defn existent-entries
-  [table column values]
+  [table column values db]
   (let [query (format "select %s from %s where %s in (%s)"
                       column table column (string/join "," values))]
     (map :listingnumber (jdbc/query db query))))
 
 (defn store-listings!
   "must be called within a db connection"
-  ([listings]
-   (store-listings! listings true))
-  ([listings store-events?]
+  ([db listings]
+   (store-listings! db listings true))
+  ([db listings store-events?]
    (jdbc/with-db-transaction [connection db]
      (let [new-entries (map :ListingNumber listings)
-           existing-entries (existent-entries "numeric" "listingnumber" new-entries)
+           existing-entries (existent-entries "numeric" "listingnumber" new-entries db)
            entries-to-store (set/difference (set new-entries) (set existing-entries))
            listings-for-storage (->> listings
                                      (filter (comp entries-to-store :ListingNumber)))]
 
        (apply (partial jdbcd/insert-records :numeric)
               (->> listings-for-storage
-                   (map #(select-keys % numeric-fields))))
+                   (map #(select-keys % (conj (keys numeric-fields) :ListingNumber)))))
 
        (apply (partial jdbcd/insert-records :character)
               (->> listings-for-storage
-                   (map #(select-keys % (cons :ListingNumber character-fields)))))
+                   (map #(select-keys % (conj (keys character-fields) :ListingNumber)))))
 
        (log/info "stored listings")
        (when store-events?

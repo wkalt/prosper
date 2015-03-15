@@ -1,17 +1,30 @@
 (ns prosper.core
+  (:gen-class)
   (:require [prosper.collection :as collection]
+            [clojure.tools.logging :as log]
+            [prosper.config :as config]
             [prosper.migrate :as migrate]))
 
 (def ns-prefix "prosper")
 
-(defn parse-collection
-  [args]
-  (case (first args)
-    "-d" (collection/query-and-store (read-string (second args)) 333)))
+(defn validate-cli-args
+  [[command & args]]
+  (let [cli-map (reduce conj {} (map vec (partition 2 args)))]
+    (cond
+      (not (get cli-map "-c"))
+      (log/error "-c (config) is required")
+
+      (and (= "collection" command) (not (get cli-map "-d")))
+      (log/error "duration is required for collection")
+
+      :else
+      cli-map)))
 
 (defn -main
   [& args]
-  (case (first args)
-    "collection" (parse-collection (rest args))
-    "migrate" (migrate/migrate!))
-  (System/exit 0))
+  (let [cli-map (validate-cli-args args)
+        config-map (config/load-config (get cli-map "-c"))]
+      (case (first args)
+        "collection" (collection/query-and-store (read-string (get cli-map "-d")) 333)
+        "migrate" (migrate/migrate!))
+      (System/exit 0)))

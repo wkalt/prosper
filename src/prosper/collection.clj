@@ -5,13 +5,8 @@
             [clojure.java.jdbc.deprecated :as jdbcd]
             [prosper.storage :as storage]
             [clojure.java.jdbc :as jdbc]
+            [prosper.config :refer [*db*]]
             [clojure.core.async :as as]))
-
-(def postgres-db {:subprotocol "postgresql"
-                  :subname "//localhost:5432/prosper"
-                  :user "prosper"
-                  :password "prosper"
-                  :classname "org.postgresql.Driver"})
 
 (defn query-and-store
   [duration interval]
@@ -28,9 +23,9 @@
     (as/thread
       (pmap
         (fn [x]
-          (jdbcd/with-connection postgres-db
+          (jdbcd/with-connection *db*
             (while true
-              (storage/store-listings! (as/<!! listing-ch))
+              (storage/store-listings! *db* (as/<!! listing-ch))
               (swap! listing-depth dec))))
         (range 8)))
 
@@ -43,7 +38,8 @@
 
     (while (after? end-time (now))
       (Thread/sleep interval)
-      (as/>!! future-ch (query/kit-get "Listings"))
+      (let [result (query/kit-get "Listings")]
+        (as/>!! future-ch result))
       (swap! future-depth inc))
 
     (while (not (zero? @listing-depth))
