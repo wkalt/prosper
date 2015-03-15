@@ -7,7 +7,10 @@
 * automated package testing
 * daemonized collection
 * where will collection run? set up backups
+* log rotation
 * start running collection in production
+* make db connection handling more efficient
+* create a way to start and stop querying and the service itself
 
 ## phase 2
 * web interface / investment tracking / reporting

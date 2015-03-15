@@ -14,9 +14,6 @@
       (not (get cli-map "-c"))
       (log/error "-c (config) is required")
 
-      (and (= "collection" command) (not (get cli-map "-d")))
-      (log/error "duration is required for collection")
-
       :else
       cli-map)))
 
@@ -25,10 +22,6 @@
   (let [cli-map (validate-cli-args args)
         config-map (config/load-config (get cli-map "-c"))]
     (case (first args)
-      "collection" (collection/query-and-store
-                     (read-string (get cli-map "-d"))
-                     (if (get cli-map "-i")
-                       (read-string (get cli-map "-i"))
-                       333)) ;; if no interval is supplied, default to 3x/sec
+      "collection" (collection/query-and-store)
       "migrate" (migrate/migrate!))
     (System/exit 0)))

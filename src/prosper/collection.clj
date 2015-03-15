@@ -1,46 +1,60 @@
 (ns prosper.collection
   (:require [prosper.query :as query]
             [clojure.tools.logging :as log]
-            [clj-time.core :refer [now plus secs after?]]
+            [clj-time.core :refer [now plus secs after? date-time] :as t]
+            [clj-time.predicates :as pr]
+            [clj-time.local :as l]
             [clojure.java.jdbc.deprecated :as jdbcd]
             [prosper.storage :as storage]
             [clojure.java.jdbc :as jdbc]
             [prosper.config :refer [*db*]]
             [clojure.core.async :as as]))
 
+(defn release-times
+  []
+  (if (pr/weekend? (l/local-now))
+    [(t/interval (t/today-at 19 50) (t/today-at 20 15))]
+    [(t/interval (t/today-at 15 50) (t/today-at 16 15))
+     (t/interval (t/today-at 23 50) ;; this one spans midnight UTC
+                 (plus (t/today-at 23 50) (t/minutes 25)))]))
+
+(defn in-release?
+  []
+  (boolean (some true? (map #(t/within? % (now)) (release-times)))))
+
+(defn create-listing-consumer-watch
+  [listing-ch]
+  (log/info "registering listing consumer")
+  (fn [key atom old-state new-state]
+    (when (< old-state new-state)
+      (jdbcd/with-connection *db*
+        (storage/store-listings! *db* (as/<!! listing-ch)))
+      (swap! atom dec))))
+
+(defn create-future-consumer-watch
+  [future-ch listing-depth listing-ch]
+  (log/info "registering future consumer")
+  (fn [key atom old-state new-state]
+    (when (< old-state new-state)
+      (as/>!! listing-ch (query/parse-body @(as/<!! future-ch)))
+      (swap! atom dec)
+      (swap! listing-depth inc))))
+
 (defn query-and-store
-  [duration interval]
+  []
   (let [future-ch (as/chan 40)
         future-depth (atom 0)
         listing-ch (as/chan 500)
-        listing-depth (atom 0)
-        end-time (plus (now) (secs duration))]
-    (log/info (format "Starting query run of %s seconds at interval %s ms."
-                      duration interval))
-    (as/thread
-      (pmap ;; TODO this should probably be tightened up
-        (fn [x]
-          (jdbcd/with-connection *db*
-            (while true
-              (storage/store-listings! *db* (as/<!! listing-ch))
-              (swap! listing-depth dec))))
-        (range (.availableProcessors (Runtime/getRuntime)))))
+        listing-depth (atom 0)]
 
-    (as/thread
-      (while true
-        (when (pos? @future-depth)
-          (as/>!! listing-ch (query/parse-body @(as/<!! future-ch)))
-          (swap! future-depth dec)
-          (swap! listing-depth inc))))
+    (add-watch future-depth :future-consumer
+               (create-future-consumer-watch future-ch listing-depth listing-ch))
+    (add-watch listing-depth :listing-consumer
+               (create-listing-consumer-watch listing-ch))
 
-    (while (after? end-time (now))
-      (Thread/sleep interval)
-      (let [result (query/kit-get "Listings")]
-        (as/>!! future-ch result))
-      (swap! future-depth inc))
-
-    (while (not (zero? @listing-depth))
-      (Thread/sleep 500)) ;; sleep half secs until listings drain
-
-    (as/close! future-ch)
-    (as/close! listing-ch)))
+    (while true
+      (let [interval (if (in-release?) 333 60000)]
+        (Thread/sleep interval)
+        (let [result (query/kit-get "Listings")]
+          (as/>!! future-ch result))
+        (swap! future-depth inc)))))
