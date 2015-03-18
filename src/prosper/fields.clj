@@ -104,7 +104,7 @@
    :BAC752 "integer"
    :TotalInquiries "integer"
    :BAC302 "integer"
-   :LoanNumber "timestamp with time zone"
+   :LoanNumber "integer"
    :BAC084 "integer"
    :IncomeVerifiable "boolean"
    :ALE022 "integer"
@@ -148,9 +148,9 @@
    :ProsperScore "integer"
    :ALL128 "integer"
    :ALL152 "integer"
-   :PriorProsperLoansLateCycles "timestamp with time zone"
+   :PriorProsperLoansLateCycles "integer"
    :REV006 "integer"
-   :MaxPriorProsperLoan "timestamp with time zone"
+   :MaxPriorProsperLoan "double precision"
    :ALL145 "integer"
    :RTL080 "integer"
    :ALL141 "integer"
@@ -464,7 +464,7 @@
    :REV403 "integer"
    :AUT001 "integer"
    :ILN914 "integer"
-   :ScoreXChange "varchar(10)"
+   :ScoreXChange "varchar(25)"
    :REV751 "integer"
    :ALL807 "integer"
    :ALE903 "integer"
@@ -477,7 +477,7 @@
    :ALE503 "integer"
    :ILN006 "integer"
    :BorrowerMetropolitanArea "varchar(120)"
-   :OldestTradeOpenDate "timestamp with time zone"
+   :OldestTradeOpenDate "varchar(20)"
    :REV504 "integer"
    :RTL075 "integer"
    :ILN601 "integer"
@@ -552,6 +552,10 @@
    :REV086 "integer"
    :PriorProsperLoansPrincipalOutstanding "double precision"
    :ALL052 "integer"})
+
+(def date-fields
+  (into {} (filter (comp #(= "timestamp with time zone" %) val)
+                   fields)))
 
 (def numeric-fields
   (into {} (filter (comp #(or (= "integer" %)

@@ -46,6 +46,10 @@
   [query-string]
   (http/get query-string {:accept :json :basic-auth [*user* *pw*]}))
 
+(defn wrap-with-creds
+  [query-string user pw]
+  (http/get query-string {:accept :json :basic-auth [user pw]}))
+
 (defn kit-wrap
   [query-string]
   (kit/get query-string {:accept :json :basic-auth [*user* *pw*]}))
@@ -58,9 +62,17 @@
 
 (defn query-get
   ([endpoint]
-   (parse-body (wrap-with-http (str base-url endpoint))))
+   (parse-body (wrap-with-creds (str base-url endpoint) *user* *pw*)))
   ([endpoint query]
-   (parse-body (wrap-with-http (format "%s%s?$filter=%s" base-url endpoint (compile-term query))))))
+   (parse-body (-> (format "%s%s?$filter=%s" base-url endpoint (compile-term query))
+                   (wrap-with-creds *user* *pw*)))))
+
+(defn query-creds
+  ([endpoint user pw]
+   (parse-body (wrap-with-creds (str base-url endpoint) user pw)))
+  ([endpoint query user pw]
+   (parse-body (-> (format "%s%s?$filter=%s" base-url endpoint (compile-term query))
+                   (wrap-with-creds user pw)))))
 
 (defn query-string
   ([endpoint]

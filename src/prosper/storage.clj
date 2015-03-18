@@ -7,7 +7,7 @@
             [clojure.set :as set]
             [clojure.string :as string]
             [prosper.query :as q]
-            [prosper.fields :refer [numeric-fields character-fields]]
+            [prosper.fields :refer [numeric-fields character-fields date-fields]]
             [clj-time.coerce :refer [to-timestamp]]))
 
 (defn munge-event
@@ -19,6 +19,16 @@
      :amount_participation AmountParticipation
      :listing_amount_funded ListingAmountFunded
      :listingnumber ListingNumber}))
+
+(defn mapvals
+  ([f m]
+   (into {} (for [[k v] m] [k (f v)])))
+  ([f ks m]
+   (reduce (fn [m k] (update-in m [k] f)) m ks)))
+
+(defn update-time-fields
+  [listing]
+  (mapvals to-timestamp (keys date-fields) listing))
 
 (defn store-events!
   [listings]
@@ -34,12 +44,13 @@
 
 (defn store-listings
   [listings-to-store]
-  (->> listings-to-store
-       (map #(select-keys % (conj (keys numeric-fields) :ListingNumber)))
-       (apply (partial jdbcd/insert-records :numeric)))
-  (->> listings-to-store
-       (map #(select-keys % (conj (keys character-fields) :ListingNumber)))
-       (apply (partial jdbcd/insert-records :character))))
+    (->> listings-to-store
+         (map #(select-keys % (conj (keys numeric-fields) :ListingNumber)))
+         (apply (partial jdbcd/insert-records :numeric)))
+    (->> listings-to-store
+         (map #(select-keys % (conj (keys character-fields) :ListingNumber)))
+         (map update-time-fields)
+         (apply (partial jdbcd/insert-records :character))))
 
 (defn store-listings!
   "must be called within a db connection"
