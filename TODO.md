@@ -5,13 +5,11 @@
 * input schema validation
 * tests
 * automated package testing
-* daemonized collection
 * where will collection run? set up backups
 * log rotation
 * start running collection in production
 * make db connection handling more efficient
-* create a way to start and stop querying and the service itself
-* convert to a trapper keeper service
+* tk transition cleanup
 
 ## phase 2
 * web interface / investment tracking / reporting
