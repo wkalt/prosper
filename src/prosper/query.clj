@@ -38,9 +38,11 @@
   (format "%s+and+%s" (compile-term a) (compile-term b)))
 
 (defn parse-body
-  [resp]
-  (-> (:body resp)
-      (json/parse-string true)))
+  [{:keys [status body message]}]
+  (if (= 200 status)
+    (-> body
+        (json/parse-string true))
+    (log/error message)))
 
 (defn wrap-with-http
   [query-string]
