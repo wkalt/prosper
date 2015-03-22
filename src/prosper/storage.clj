@@ -15,7 +15,6 @@
            ListingAmountFunded ListingNumber]}]
   (let [current-time (now)]
     {:timestamp (to-timestamp current-time)
-     :amount_remaining AmountRemaining
      :amount_participation AmountParticipation
      :listing_amount_funded ListingAmountFunded
      :listingnumber ListingNumber}))
@@ -31,12 +30,17 @@
   (mapvals to-timestamp (keys date-fields) listing))
 
 (defn store-events!
-  [listings]
+  [listings db]
+  (let [listingnumbers (map :ListingNumber listings)
+        latest-events (existing-entries
+                        "amountremaining""listingnumber,amountremaining" listingnumbers db)]
+
+    )
   (apply (partial jdbcd/insert-records :events)
          (map munge-event listings))
   (log/info "stored events"))
 
-(defn existing-events
+(defn existing-entries
   [table column values db]
   (let [query (format "select %s from %s where %s in (%s)"
                       column table column (string/join "," values))]
@@ -58,11 +62,11 @@
    (store-listings! db listings true))
   ([db listings store-events?]
    (jdbc/with-db-transaction [connection db]
-     (let [new-events (map :ListingNumber listings)
-           existing (existing-events "numeric" "listingnumber" new-events db)
-           events-to-store (set/difference (set new-events) (set existing))
+     (let [new-listings (map :ListingNumber listings)
+           existing-listings (existing-entries "numeric" "listingnumber" new-listings db)
+           new-listingnumbers (set/difference (set new-listings) (set existing-listings))
            listings-to-store (->> listings
-                                  (filter (comp events-to-store :ListingNumber)))]
+                                  (filter (comp new-listingnumbers :ListingNumber)))]
        (if (empty? listings-to-store)
          (log/info "no new listings")
          (do (store-listings listings-to-store)

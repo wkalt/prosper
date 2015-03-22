@@ -33,9 +33,13 @@
     ["entry_id" "bigint NOT NULL PRIMARY KEY DEFAULT nextval('entry_id_seq')"]
     ["listingnumber" "bigint references numeric(listingnumber)"]
     ["timestamp" "TIMESTAMP WITH TIME ZONE"]
-    ["amount_remaining" "integer"]
     ["amount_participation" "integer"]
     ["listing_amount_funded" "integer"])
+
+  (jdbcd/create-table
+    :amountremaining
+    ["listingnumber" "bigint references numeric(listingnumber)"]
+    ["amount_remaining" "integer not null"])
 
   (jdbcd/create-table
     :migrations
