@@ -558,9 +558,9 @@
                    fields)))
 
 (def numeric-fields
-  (into {} (filter (comp #(or (= "integer" %)
-                              (= "double precision" %)) val)
-                   fields)))
+  (->> fields
+       (filter (comp #(or (= "integer" %) (= "double precision" %)) val))
+       (into {})))
 
 (def character-fields
   (select-keys fields (remove (set (keys numeric-fields)) (keys fields))))

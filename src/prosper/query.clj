@@ -1,6 +1,7 @@
 (ns prosper.query
   (:require [clj-http.client :as http]
             [org.httpkit.client :as kit]
+            [clojure.tools.logging :as log]
             [prosper.config :refer [*user* *pw*]]
             [cheshire.core :as json]))
 

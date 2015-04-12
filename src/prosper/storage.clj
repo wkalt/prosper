@@ -13,10 +13,12 @@
 (defn munge-event
   [{:keys [AmountRemaining AmountParticipation
            ListingAmountFunded ListingNumber]}]
+  (println "munging")
   (let [current-time (now)]
     {:timestamp (to-timestamp current-time)
      :amount_participation AmountParticipation
      :listing_amount_funded ListingAmountFunded
+     :amountremaining AmountRemaining
      :listingnumber ListingNumber}))
 
 (defn mapvals
@@ -29,16 +31,33 @@
   [listing]
   (mapvals to-timestamp (keys date-fields) listing))
 
-(defn store-events!
-  [listings db]
-  (let [listingnumbers (map :ListingNumber listings)
-        latest-events (existing-entries
-                        "amountremaining""listingnumber,amountremaining" listingnumbers db)]
+(defn update-event!
+  [{:keys [amountremaining listingnumber] :as event}]
+  (println "update event")
+  (jdbcd/insert-records :events (dissoc event :amountremaining))
+  (jdbcd/update-or-insert-values :amountremaining
+                                 (format "listingnumber=%s" listingnumber)
+                                 {:listingnumber listingnumber
+                                  :amountremaining amountremaining}))
 
-    )
-  (apply (partial jdbcd/insert-records :events)
-         (map munge-event listings))
-  (log/info "stored events"))
+(defn store-events!
+  [listings]
+  (let [listingnumbers (map :ListingNumber listings)
+        amounts-remaining (->> listingnumbers
+                               (format "select listingnumber,amountremaining from amountremaining where listingnumber in %s" listingnumbers)
+                               (reduce #(assoc %1 (:listingnumber %2)
+                                          (:amountremaining %2)) {}))
+        _ (println "AMOUNTS REMAINING" amounts-remaining)
+        listings-to-store (if (nil? (first (vals amounts-remaining))) listings
+                            (-> listings
+                                (filter #(not= (:AmountRemaining %)
+                                               (get amounts-remaining (:ListingNumber %))))))]
+
+    (if-not (empty? listings-to-store)
+      (do (println "COUNT LISTINGS" (count listings-to-store))
+          #spy/d (map update-event! (map munge-event listings-to-store))
+          (log/info "stored new events"))
+      (log/info "no new events"))))
 
 (defn existing-entries
   [table column values db]
@@ -48,13 +67,16 @@
 
 (defn store-listings
   [listings-to-store]
+  (log/debug "storing listings")
+  (try
     (->> listings-to-store
          (map #(select-keys % (conj (keys numeric-fields) :ListingNumber)))
          (apply (partial jdbcd/insert-records :numeric)))
     (->> listings-to-store
          (map #(select-keys % (conj (keys character-fields) :ListingNumber)))
          (map update-time-fields)
-         (apply (partial jdbcd/insert-records :character))))
+         (apply (partial jdbcd/insert-records :character)))
+    (catch Exception e (log/error (format "Error storing listings:" (.getMessage e))))))
 
 (defn store-listings!
   "must be called within a db connection"
