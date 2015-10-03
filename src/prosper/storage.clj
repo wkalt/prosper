@@ -13,7 +13,6 @@
 (defn munge-event
   [{:keys [AmountRemaining AmountParticipation
            ListingAmountFunded ListingNumber]}]
-  (println "munging")
   (let [current-time (now)]
     {:timestamp (to-timestamp current-time)
      :amount_participation AmountParticipation
@@ -32,8 +31,7 @@
   (mapvals to-timestamp (keys date-fields) listing))
 
 (defn update-event!
-  [{:keys [amountremaining listingnumber] :as event}]
-  (println "update event")
+  [{:keys [amountremaining listingnumber amount_participation listing_amount_funded] :as event}]
   (jdbcd/insert-records :events (dissoc event :amountremaining))
   (jdbcd/update-or-insert-values :amountremaining
                                  (format "listingnumber=%s" listingnumber)
@@ -44,10 +42,10 @@
   [listings]
   (let [listingnumbers (map :ListingNumber listings)
         amounts-remaining (->> listingnumbers
-                               (format "select listingnumber,amountremaining from amountremaining where listingnumber in %s" listingnumbers)
+                               (format "select listingnumber,amountremaining from
+                                        amountremaining where listingnumber in %s" listingnumbers)
                                (reduce #(assoc %1 (:listingnumber %2)
                                           (:amountremaining %2)) {}))
-        _ (println "AMOUNTS REMAINING" amounts-remaining)
         listings-to-store (if (nil? (first (vals amounts-remaining))) listings
                             (-> listings
                                 (filter #(not= (:AmountRemaining %)
@@ -55,7 +53,7 @@
 
     (if-not (empty? listings-to-store)
       (do (println "COUNT LISTINGS" (count listings-to-store))
-          #spy/d (map update-event! (map munge-event listings-to-store))
+          (map update-event! (map munge-event listings-to-store))
           (log/info "stored new events"))
       (log/info "no new events"))))
 
