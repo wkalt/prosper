@@ -21,7 +21,10 @@
 
 (defn update-events!
   [events]
-  (apply (partial jdbcd/insert-records :events) events))
+  (try
+    (apply (partial jdbcd/insert-records :events) events)
+    (catch Exception _
+      (println "foo"))))
 
 (defn munge-event
   [{:keys [AmountRemaining AmountParticipation
