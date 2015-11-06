@@ -1,7 +1,10 @@
 **TODO**:
 
+## immediate
+* cjnage tk to something else 
+* change all variable names to capitalize like prosper's
+
 ## phase 1
-* can we store new events more efficiently? things don't change often
 * input schema validation
 * tests
 * automated package testing
