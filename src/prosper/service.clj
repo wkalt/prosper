@@ -14,7 +14,8 @@
   (let [host (get-in config [:webserver :host])
         port (get-in config [:webserver :port])
         url-prefix (get-route service)]
-    (log/infof "Hello web service started; visit http://%s:%s%s/world to check it out!"
+    (log/infof "Hello web service started; visit http://%s:%s%s/world
+                to check it out!"
                host port url-prefix)
     (future (collection/query-and-store))
     context))
@@ -32,6 +33,7 @@
            (add-ring-handler this
                              (compojure/context
                                url-prefix []
-                               (core/app (tk-services/get-service this :HelloService))))
+                               (core/app (tk-services/get-service
+                                           this :HelloService))))
            (assoc context :url-prefix url-prefix)
            (start-prosper-service context config this get-route))))

@@ -46,7 +46,8 @@
         listing-depth (atom 0)]
 
     (add-watch future-depth :future-consumer
-               (create-future-consumer-watch future-ch listing-depth listing-ch))
+               (create-future-consumer-watch future-ch listing-depth
+                                             listing-ch))
     (log/info "registered future consumer")
     (add-watch listing-depth :listing-consumer
                (create-listing-consumer-watch listing-ch))

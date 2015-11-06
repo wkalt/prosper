@@ -7,7 +7,8 @@
             [clojure.set :as set]
             [clojure.string :as string]
             [prosper.query :as q]
-            [prosper.fields :refer [numeric-fields character-fields date-fields]]
+            [prosper.fields :refer [numeric-fields character-fields
+                                    date-fields]]
             [clj-time.coerce :refer [to-timestamp]]))
 
 (defn mapvals
@@ -56,7 +57,8 @@
          (map #(select-keys % (conj (keys character-fields) :ListingNumber)))
          (map update-time-fields)
          (apply (partial jdbcd/insert-records :character)))
-    (catch Exception e (log/error (format "Error storing listings:" (.getMessage e))))))
+    (catch Exception e (log/error (format "Error storing listings:"
+                                          (.getMessage e))))))
 
 (defn store-listings!
   "must be called within a db connection"
@@ -65,10 +67,12 @@
   ([db listings store-events?]
    (jdbc/with-db-transaction [connection db]
      (let [new-listings (map :ListingNumber listings)
-           existing-listings (existing-entries "numeric" "listingnumber" new-listings db)
-           new-listingnumbers (set/difference (set new-listings) (set existing-listings))
-           listings-to-store (->> listings
-                                  (filter (comp new-listingnumbers :ListingNumber)))]
+           existing-listings (existing-entries "numeric" "listingnumber"
+                                               new-listings db)
+           new-listingnumbers (set/difference (set new-listings)
+                                              (set existing-listings))
+           listings-to-store (filter (comp new-listingnumbers :ListingNumber)
+                                     listings)]
        (if (empty? listings-to-store)
          (log/info "no new listings")
          (do (store-listings listings-to-store)
