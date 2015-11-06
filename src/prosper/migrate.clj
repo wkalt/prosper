@@ -33,8 +33,13 @@
     ["entry_id" "bigint NOT NULL PRIMARY KEY DEFAULT nextval('entry_id_seq')"]
     ["listingnumber" "bigint references numeric(listingnumber)"]
     ["timestamp" "TIMESTAMP WITH TIME ZONE"]
-    ["amount_participation" "integer"]
-    ["listing_amount_funded" "integer"])
+    ["amount_participation" "numeric"]
+    ["amountremaining" "numeric"]
+    ["listing_amount_funded" "numeric"])
+
+  (jdbcd/do-commands
+    "ALTER TABLE events ADD CONSTRAINT events_listingnumber_amountremaining
+     UNIQUE (listingnumber,amountremaining)")
 
   (jdbcd/create-table
     :amountremaining
