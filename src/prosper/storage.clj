@@ -52,8 +52,7 @@
                                                (get amounts-remaining (:ListingNumber %))))))]
 
     (if-not (empty? listings-to-store)
-      (do (println "COUNT LISTINGS" (count listings-to-store))
-          (map update-event! (map munge-event listings-to-store))
+      (do (map update-event! (map munge-event listings-to-store))
           (log/info "stored new events"))
       (log/info "no new events"))))
 
