@@ -12,6 +12,7 @@
 
 (defn release-times
   []
+  ;; TODO this is hardcoded
   (if (pr/weekend? (l/local-now))
     [(t/interval (t/today-at 19 50) (t/today-at 20 15))]
     [(t/interval (t/today-at 15 50) (t/today-at 16 15))

@@ -5,8 +5,6 @@
             [prosper.config :as config]
             [prosper.migrate :as migrate]))
 
-(def ns-prefix "prosper")
-
 (defn validate-cli-args
   [[command & args]]
   (let [cli-map (reduce conj {} (map vec (partition 2 args)))]
