@@ -4,6 +4,9 @@ A clojure service for investing on Prosper.com
 
 **HOW TO USE**
 
+* copy /dev-resourcces/config.conf.example to /dev-resources/config.conf
+and change your credentials
+
 * Create a prosper account for yourself and obtain API credentials (this is free
 but requires a bank account)
 
