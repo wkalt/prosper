@@ -52,6 +52,7 @@
 (defn store-listings
   [listings-to-store]
   (log/debug "storing listings")
+  ;; TODO make this in a single transaction
   (try
     (->> listings-to-store
          (map #(select-keys % (conj (keys numeric-fields) :ListingNumber)))
