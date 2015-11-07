@@ -1,8 +1,8 @@
 **TODO**:
 
 ## immediate
-* cjnage tk to something else 
-* change all variable names to capitalize like prosper's$
+* change tk to something else 
+* change all variable names to capitalize like prosper's
 * remove unused ns's
 
 ## phase 1
