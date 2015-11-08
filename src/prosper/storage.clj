@@ -19,12 +19,23 @@
   [listing]
   (mapvals to-timestamp (keys date-fields) listing))
 
+(defn insert-statement
+  [event]
+  (format "(%s,'%s',%s,%s,%s)"
+          (:listingnumber event)
+          (:timestamp event)
+          (:amount_participation event)
+          (:amountremaining event)
+          (:listing_amount_funded event)))
+
 (defn update-events!
   [events]
-  (try
-    (apply (partial jdbcd/insert-records :events) events)
-    (catch Exception _
-      (println "foo"))))
+  (jdbcd/do-commands
+    (format "INSERT INTO events
+             (listingnumber,timestamp,amount_participation,amountremaining,listing_amount_funded)
+             VALUES
+             %s ON CONFLICT DO NOTHING"
+            (string/join "," (map insert-statement events)))))
 
 (defn munge-event
   [{:keys [AmountRemaining AmountParticipation

@@ -4,6 +4,8 @@ A clojure service for investing on Prosper.com
 
 **HOW TO USE**
 
+* install postgres 9.5
+
 * copy /dev-resourcces/config.conf.example to /dev-resources/config.conf
 and change your credentials
 
