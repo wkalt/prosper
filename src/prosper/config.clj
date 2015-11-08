@@ -1,5 +1,4 @@
-(ns prosper.config
-  (:require [clojure-ini.core :as ini]))
+(ns prosper.config)
 
 (def ^:dynamic *config* nil)
 (def ^:dynamic *db* nil)

@@ -7,8 +7,7 @@
             [clojure.set :as set]
             [clojure.string :as string]
             [prosper.query :as q]
-            [prosper.fields :refer [numeric-fields character-fields
-                                    date-fields]]
+            [prosper.fields :refer [fields date-fields]]
             [clj-time.coerce :refer [to-timestamp]]))
 
 (defn mapvals
@@ -68,12 +67,9 @@
   ;; TODO make this in a single transaction
   (try
     (->> listings-to-store
-         (map #(select-keys % (conj (keys numeric-fields) :ListingNumber)))
-         (apply (partial jdbcd/insert-records :numeric)))
-    (->> listings-to-store
-         (map #(select-keys % (conj (keys character-fields) :ListingNumber)))
+         (map #(select-keys % (conj (keys fields) :ListingNumber)))
          (map update-time-fields)
-         (apply (partial jdbcd/insert-records :character)))
+         (apply (partial jdbcd/insert-records :listings)))
     (catch Exception e (log/error (format "Error storing listings:"
                                           (.getMessage e))))))
 
@@ -84,7 +80,7 @@
   ([db listings store-events?]
    (jdbc/with-db-transaction [connection db]
      (let [new-listings (map :ListingNumber listings)
-           existing-listings (existing-entries "numeric" "listingnumber"
+           existing-listings (existing-entries "listings" "listingnumber"
                                                new-listings db)
            new-listingnumbers (set/difference (set new-listings)
                                               (set existing-listings))

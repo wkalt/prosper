@@ -5,33 +5,40 @@
             [clojure.set :refer [difference]]
             [clj-time.coerce :refer [to-timestamp]]
             [clojure.tools.logging :as log]
-            [prosper.fields :refer [numeric-fields character-fields]]
+            [prosper.fields :refer [fields]]
             [clojure.walk :refer [stringify-keys]]
             [prosper.config :refer [*config*]]
             [prosper.query :as q]))
 
 (defn initial-migration
   []
+
   (jdbcd/do-commands
-    (apply jdbcd/create-table-ddl :numeric
-           (-> numeric-fields
+    (apply jdbcd/create-table-ddl :listings
+           (-> fields
                (assoc "listingnumber" "bigint not null primary key")
                stringify-keys
                seq)))
-  (jdbcd/do-commands
-    (apply jdbcd/create-table-ddl
-           :character
-           (-> character-fields
-               (assoc "listingnumber" "bigint references numeric(listingnumber)")
-               stringify-keys
-               seq)))
+  ;(jdbcd/do-commands
+  ;  (apply jdbcd/create-table-ddl :numeric
+  ;         (-> numeric-fields
+  ;             (assoc "listingnumber" "bigint not null primary key")
+  ;             stringify-keys
+  ;             seq)))
+  ;(jdbcd/do-commands
+  ;  (apply jdbcd/create-table-ddl
+  ;         :character
+  ;         (-> character-fields
+  ;             (assoc "listingnumber" "bigint references numeric(listingnumber)")
+  ;             stringify-keys
+  ;             seq)))
   (jdbcd/do-commands
     "CREATE SEQUENCE entry_id_seq CYCLE")
 
   (jdbcd/create-table
     :events
     ["entry_id" "bigint NOT NULL PRIMARY KEY DEFAULT nextval('entry_id_seq')"]
-    ["listingnumber" "bigint references numeric(listingnumber)"]
+    ["listingnumber" "bigint references listings(listingnumber)"]
     ["timestamp" "TIMESTAMP WITH TIME ZONE"]
     ["amount_participation" "numeric"]
     ["amountremaining" "numeric"]
@@ -43,7 +50,7 @@
 
   (jdbcd/create-table
     :amountremaining
-    ["listingnumber" "bigint references numeric(listingnumber)"]
+    ["listingnumber" "bigint references listings(listingnumber)"]
     ["amount_remaining" "integer not null"])
 
   (jdbcd/create-table
