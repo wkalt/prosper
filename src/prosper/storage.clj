@@ -30,12 +30,15 @@
 
 (defn update-events!
   [events]
-  (jdbcd/do-commands
-    (format "INSERT INTO events
-             (listingnumber,timestamp,amount_participation,amountremaining,listing_amount_funded)
-             VALUES
-             %s ON CONFLICT DO NOTHING"
-            (string/join "," (map insert-statement events)))))
+  (let [n (first (jdbcd/do-commands
+                   (format "INSERT INTO events
+                            (listingnumber,timestamp,amount_participation,amountremaining,listing_amount_funded)
+                            VALUES
+                            %s ON CONFLICT DO NOTHING"
+                           (string/join "," (map insert-statement events)))))]
+
+    (if (> n 0)
+      (log/infof "Inserted %s new events" n))))
 
 (defn munge-event
   [{:keys [AmountRemaining AmountParticipation
@@ -51,8 +54,7 @@
   "This function is not done"
   [listings db]
   (let [events-for-storage (map munge-event listings)]
-    (update-events! events-for-storage)
-    (log/debug "stored events")))
+    (update-events! events-for-storage)))
 
 (defn existing-entries
   [table column values db]
@@ -89,7 +91,7 @@
            listings-to-store (filter (comp new-listingnumbers :ListingNumber)
                                      listings)]
        (if (empty? listings-to-store)
-         (log/info "no new listings")
+         (log/debug "no new listings")
          (do (store-listings listings-to-store)
              (log/info (format "stored %s new listings"
                                (count listings-to-store)))))
