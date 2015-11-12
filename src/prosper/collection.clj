@@ -15,7 +15,7 @@
   ;; TODO this is hardcoded
   (if (pr/weekend? (l/local-now))
     [(t/interval (t/today-at 19 50) (t/today-at 20 15))]
-    [(t/interval (t/today-at 15 50) (t/today-at 16 15))
+    [(t/interval (t/today-at 16 50) (t/today-at 16 15))
      (t/interval (t/today-at 23 50) ;; this one spans midnight UTC
                  (plus (t/today-at 23 50) (t/minutes 25)))]))
 
