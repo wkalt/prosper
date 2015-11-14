@@ -39,11 +39,11 @@
   (format "%s+and+%s" (compile-term a) (compile-term b)))
 
 (defn parse-body
-  [{:keys [status body message]}]
+  [{:keys [status body message] :as response}]
   (if (= 200 status)
     (-> body
         (json/parse-string true))
-    (log/error message)))
+    (log/errorf "HTTP request received %s. body is %s" status response)))
 
 (defn kit-wrap
   [query-string]
