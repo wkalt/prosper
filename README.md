@@ -31,5 +31,5 @@ psql -c 'create role prosper with login database'
 psql -c 'create database prosper owner prosper'
 
 * run it
-lein tk
+lein prosper
 
