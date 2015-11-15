@@ -35,7 +35,8 @@
   [future-ch listing-depth listing-ch]
   (fn [key atom old-state new-state]
     (when (< old-state new-state)
-      (as/>!! listing-ch (query/parse-body @(as/<!! future-ch)))
+      (when-let [item (query/parse-body @(as/<!! future-ch))]
+        (as/>!! listing-ch item))
       (swap! atom dec)
       (swap! listing-depth inc))))
 
