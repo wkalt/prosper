@@ -29,15 +29,18 @@
 
 (defn update-events!
   [events]
-  (let [n (first (jdbcd/do-commands
-                   (format "INSERT INTO events
-                            (listingnumber,timestamp,amount_participation,amountremaining,listing_amount_funded)
-                            VALUES
-                            %s ON CONFLICT DO NOTHING"
-                           (string/join "," (map insert-statement events)))))]
+  (try
+    (let [n (first (jdbcd/do-commands
+                     (format "INSERT INTO events
+                              (listingnumber,timestamp,amount_participation,amountremaining,listing_amount_funded)
+                              VALUES
+                              %s ON CONFLICT DO NOTHING"
+                             (string/join "," (map insert-statement events)))))]
 
-    (if (> n 0)
-      (log/infof "Inserted %s new events" n))))
+      (if (> n 0)
+        (log/infof "Inserted %s new events" n)))
+    (catch Exception e
+      (log/errorf "%s unravelled exception %s" e (.getNextException e)))))
 
 (defn munge-event
   [{:keys [AmountRemaining AmountParticipation
