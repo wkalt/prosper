@@ -1,7 +1,6 @@
 **TODO**:
 
 ## immediate
-* change all variable names to capitalize like prosper's
 * remove unused ns's
 
 ## phase 1
