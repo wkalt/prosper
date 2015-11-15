@@ -35,7 +35,7 @@
   [future-ch listing-depth listing-ch]
   (fn [key atom old-state new-state]
     (when (< old-state new-state)
-      (when-let [item (query/parse-body @(as/<!! future-ch))]
+      (when-let [item (query/parse-body @@(as/<!! future-ch))]
         (as/>!! listing-ch item))
       (swap! atom dec)
       (swap! listing-depth inc))))
@@ -57,6 +57,6 @@
 
     (while true
       (Thread/sleep (if (in-release?) *release-rate* *base-rate*))
-      (let [result (query/kit-get "Listings")]
+      (let [result (future (query/kit-get "Listings"))]
         (as/>!! future-ch result))
       (swap! future-depth inc))))
