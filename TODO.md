@@ -2,10 +2,10 @@
 
 ## immediate
 * remove unused ns's
+* tests
 
 ## phase 1
 * input schema validation
-* tests
 * automated package testing
 * where will collection run? set up backups
 * log rotation
