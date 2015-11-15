@@ -1,7 +1,6 @@
 **TODO**:
 
 ## immediate
-* change tk to something else 
 * change all variable names to capitalize like prosper's
 * remove unused ns's
 
