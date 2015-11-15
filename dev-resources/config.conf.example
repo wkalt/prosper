@@ -7,6 +7,7 @@ prosper {
     password = <prosper password>
     release-rate = 333
     base-rate = 6000
+    storage-threads = 4
 }
 
 webserver {

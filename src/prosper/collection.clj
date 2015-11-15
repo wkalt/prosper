@@ -7,7 +7,8 @@
             [clojure.java.jdbc.deprecated :as jdbcd]
             [prosper.storage :as storage]
             [clojure.java.jdbc :as jdbc]
-            [prosper.config :refer [*db* *release-rate* *base-rate*]]
+            [prosper.config :refer [*db* *release-rate* *base-rate*
+                                    *storage-threads*]]
             [clojure.core.async :as as]))
 
 (defn release-times
@@ -23,22 +24,21 @@
   []
   (boolean (some true? (map #(t/within? % (now)) (release-times)))))
 
-(defn create-listing-consumer-watch
-  [listing-ch]
-  (fn [key atom old-state new-state]
-    (when (< old-state new-state)
-      (jdbcd/with-connection *db*
-        (storage/store-listings! *db* (as/<!! listing-ch)))
-      (swap! atom dec))))
+(defn start-async-producer
+  [future-ch]
+  (as/thread
+    (while true
+      (Thread/sleep (if (in-release?) *release-rate* *base-rate*))
+      (as/>!! future-ch (query/kit-get "Listings")))))
 
-(defn create-future-consumer-watch
-  [future-ch listing-depth listing-ch]
-  (fn [key atom old-state new-state]
-    (when (< old-state new-state)
-      (when-let [item (query/parse-body @@(as/<!! future-ch))]
-        (as/>!! listing-ch item))
-      (swap! atom dec)
-      (swap! listing-depth inc))))
+(defn start-async-consumers
+  [num-consumers future-ch]
+  (dotimes [_ num-consumers]
+    (as/thread
+      (while true
+        (let [item (query/parse-body @(as/<!! future-ch))]
+          (jdbcd/with-connection *db*
+            (storage/store-listings! *db* item)))))))
 
 (defn query-and-store
   []
@@ -46,17 +46,5 @@
         future-depth (atom 0)
         listing-ch (as/chan 500)
         listing-depth (atom 0)]
-
-    (add-watch future-depth :future-consumer
-               (create-future-consumer-watch future-ch listing-depth
-                                             listing-ch))
-    (log/info "registered future consumer")
-    (add-watch listing-depth :listing-consumer
-               (create-listing-consumer-watch listing-ch))
-    (log/info "registered listing consumer")
-
-    (while true
-      (Thread/sleep (if (in-release?) *release-rate* *base-rate*))
-      (let [result (future (query/kit-get "Listings"))]
-        (as/>!! future-ch result))
-      (swap! future-depth inc))))
+    (start-async-producer future-ch)
+    (start-async-consumers 4 future-ch)))

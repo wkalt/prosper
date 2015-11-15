@@ -51,7 +51,6 @@
 
 (defn kit-get
   ([endpoint]
-   (log/info "making request")
    (kit-wrap (str base-url endpoint)))
   ([endpoint query]
    (kit-wrap (format "%s%s?$filter=%s" base-url endpoint (compile-term query)))))
