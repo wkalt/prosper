@@ -80,17 +80,17 @@
    (store-listings! db listings true))
   ([db listings store-events?]
    (jdbc/with-db-transaction [connection db]
-     (let [new-listings (map :ListingNumber listings)
-           existing-listings (existing-entries "listings" "listingnumber"
-                                               new-listings db)
-           new-listingnumbers (set/difference (set new-listings)
-                                              (set existing-listings))
-           listings-to-store (filter (comp new-listingnumbers :ListingNumber)
-                                     listings)]
+     (when-let [new-listings (seq (map :ListingNumber listings))]
+       (let [existing-listings (existing-entries "listings" "listingnumber"
+                                                 new-listings db)
+             new-listingnumbers (set/difference (set new-listings)
+                                                (set existing-listings))
+             listings-to-store (filter (comp new-listingnumbers :ListingNumber)
+                                       listings)]
        (if (empty? listings-to-store)
          (log/debug "no new listings")
          (do (store-listings listings-to-store)
              (log/info (format "stored %s new listings"
                                (count listings-to-store)))))
        (when store-events?
-         (store-events! listings db))))))
+         (store-events! listings db)))))))
