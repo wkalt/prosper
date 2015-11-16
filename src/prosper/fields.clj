@@ -556,11 +556,3 @@
 (def date-fields
   (into {} (filter (comp #(= "timestamp with time zone" %) val)
                    fields)))
-
-(def numeric-fields
-  (->> fields
-       (filter (comp #(or (= "integer" %) (= "numeric" %)) val))
-       (into {})))
-
-(def character-fields
-  (select-keys fields (remove (set (keys numeric-fields)) (keys fields))))

@@ -1,12 +1,10 @@
 (ns prosper.storage
-  (:require [prosper.query :as query]
-            [clojure.java.jdbc :as jdbc]
+  (:require [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as log]
             [clj-time.core :refer [now]]
             [clojure.java.jdbc.deprecated :as jdbcd]
             [clojure.set :as set]
             [clojure.string :as string]
-            [prosper.query :as q]
             [prosper.fields :refer [fields date-fields]]
             [clj-time.coerce :refer [to-timestamp]]))
 
@@ -32,7 +30,8 @@
   (try
     (let [n (first (jdbcd/do-commands
                      (format "INSERT INTO events
-                              (listingnumber,timestamp,amount_participation,amountremaining,listing_amount_funded)
+                              (listingnumber,timestamp,amount_participation,
+                              amountremaining,listing_amount_funded)
                               VALUES
                               %s ON CONFLICT DO NOTHING"
                              (string/join "," (map insert-statement events)))))]
@@ -67,7 +66,6 @@
 (defn store-listings
   [listings-to-store]
   (log/debug "storing listings")
-  ;; TODO make this in a single transaction
   (try
     (->> listings-to-store
          (map #(select-keys % (conj (keys fields) :ListingNumber)))

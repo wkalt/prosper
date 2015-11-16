@@ -1,12 +1,11 @@
 (ns prosper.collection
   (:require [prosper.query :as query]
             [clojure.tools.logging :as log]
-            [clj-time.core :refer [now plus secs after? date-time] :as t]
+            [clj-time.core :refer [now plus] :as t]
             [clj-time.predicates :as pr]
             [clj-time.local :as l]
             [clojure.java.jdbc.deprecated :as jdbcd]
             [prosper.storage :as storage]
-            [clojure.java.jdbc :as jdbc]
             [prosper.config :refer [*db* *release-rate* *base-rate*
                                     *storage-threads*]]
             [clojure.core.async :as as]))

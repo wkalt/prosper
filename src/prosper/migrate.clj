@@ -19,19 +19,6 @@
                (assoc "listingnumber" "bigint not null primary key")
                stringify-keys
                seq)))
-  ;(jdbcd/do-commands
-  ;  (apply jdbcd/create-table-ddl :numeric
-  ;         (-> numeric-fields
-  ;             (assoc "listingnumber" "bigint not null primary key")
-  ;             stringify-keys
-  ;             seq)))
-  ;(jdbcd/do-commands
-  ;  (apply jdbcd/create-table-ddl
-  ;         :character
-  ;         (-> character-fields
-  ;             (assoc "listingnumber" "bigint references numeric(listingnumber)")
-  ;             stringify-keys
-  ;             seq)))
   (jdbcd/do-commands
     "CREATE SEQUENCE entry_id_seq CYCLE")
 
@@ -74,7 +61,7 @@
            (set? %)
            (apply < 0 %)]}
   (try
-    (let [query   "SELECT migration FROM migrations ORDER BY migration"
+    (let [query "SELECT migration FROM migrations ORDER BY migration"
           results (jdbcd/transaction (jdbc/query db query))]
       (apply sorted-set (map :migration results)))
     (catch java.sql.SQLException e
