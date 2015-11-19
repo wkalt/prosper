@@ -43,7 +43,8 @@
   (if (= 200 status)
     (-> body
         (json/parse-string true))
-    (log/errorf "HTTP request received %s. body is %s" status response)))
+    (log/errorf "HTTP request received %s. error is %s body is %s"
+                status (:error response) (:body response))))
 
 (defn kit-wrap
   [query-string]
