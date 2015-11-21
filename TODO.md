@@ -7,11 +7,6 @@
 ## phase 1
 * input schema validation
 * automated package testing
-* where will collection run? set up backups
-* log rotation
-* start running collection in production
-* make db connection handling more efficient
-* tk transition cleanup
 
 ## phase 2
 * web interface / investment tracking / reporting
