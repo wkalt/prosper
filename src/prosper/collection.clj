@@ -1,5 +1,6 @@
 (ns prosper.collection
   (:require [prosper.query :as query]
+            [clojure.data :refer [diff]]
             [clojure.tools.logging :as log]
             [clj-time.core :refer [now plus] :as t]
             [clj-time.predicates :as pr]
@@ -9,6 +10,8 @@
             [prosper.config :refer [*db* *release-rate* *base-rate*
                                     *storage-threads*]]
             [clojure.core.async :as as]))
+
+(def market-state (atom {}))
 
 (defn release-times
   []
@@ -30,14 +33,36 @@
       (Thread/sleep (if (in-release?) *release-rate* *base-rate*))
       (as/>!! future-ch (query/kit-get "Listings")))))
 
+(println *base-rate*)
+
+(defn value-diffs
+  "extract only listings for which amountremaining has decreased"
+  [old new-state]
+  (->> new-state
+       (filter #(< (second %) (or (get old (first %)) 100000)))
+       (into {})))
+
+(defn update-state
+  [new-listings]
+  (let [new-amounts (->> new-listings
+                         (map #(select-keys % [:ListingNumber :AmountRemaining]))
+                         (reduce #(assoc %1 (:ListingNumber %2) (:AmountRemaining %2)) {}))]
+    (swap! market-state
+           (fn [s]
+             (let [diffs (value-diffs s new-amounts)]
+               (println "DIFFS ARE" diffs)
+               (println "state diff" (diff diffs s))
+               (merge diffs s))))))
+
 (defn start-async-consumers
   [num-consumers future-ch]
   (dotimes [_ num-consumers]
     (as/thread
       (while true
         (let [item (query/parse-body @(as/<!! future-ch))]
-          (jdbcd/with-connection *db*
-            (storage/store-listings! *db* item)))))))
+          (let [updated (update-state item)]
+            (jdbcd/with-connection *db*
+              (storage/store-listings! *db* item))))))))
 
 (defn query-and-store
   []

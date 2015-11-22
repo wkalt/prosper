@@ -3,6 +3,8 @@
 ## immediate
 * remove unused ns's
 * tests
+* race condition in updates -- need to ensure that amountremaining is monotonic
+  decreasing per listing
 
 ## phase 1
 * input schema validation
