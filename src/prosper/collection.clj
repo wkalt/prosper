@@ -46,9 +46,9 @@
 
 (defn log-deltas
   [deltas]
-  (doseq [d deltas]
+  (doseq [[k v] deltas]
     (log/infof
-      "updating market state for %s: delta = %s" (first d) (second d))))
+      "updating market state for %s: delta = %s" k v)))
 
 (defn update-state
   [new-listings]
@@ -61,8 +61,6 @@
                (when-not (empty? deltas)
                  (log-deltas deltas))
                (merge s diffs))))))
-
-;(get @market-state 3838672)
 
 (defn start-async-consumers
   [num-consumers future-ch]
@@ -81,4 +79,4 @@
         listing-ch (as/chan 500)
         listing-depth (atom 0)]
     (start-async-producer future-ch)
-    (start-async-consumers 4 future-ch)))
+    (start-async-consumers *storage-threads* future-ch)))

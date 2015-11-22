@@ -8,16 +8,6 @@
             [prosper.fields :refer [fields date-fields]]
             [clj-time.coerce :refer [to-timestamp]]))
 
-(def market-state (atom {}))
-
-(defn update-state-for-event
-  [{:keys [listingnumber amountremaining]}]
-  (let [previous-amount (get @market-state listingnumber)]
-    (swap! market-state #(assoc % listingnumber amountremaining))
-    {listingnumber (if previous-amount
-                     (- amountremaining previous-amount)
-                     amountremaining)}))
-
 (defn mapvals
   ([f m] (into {} (for [[k v] m] [k (f v)])))
   ([f ks m] (reduce (fn [m k] (update-in m [k] f)) m ks)))
@@ -47,7 +37,8 @@
                              (string/join "," (map insert-statement events)))))]
 
       (if (> n 0)
-        (log/infof "Inserted %s new events" n)))
+        (log/infof "Inserted %s new events" n)
+        (log/debug "No new events")))
     (catch Exception e
       (log/errorf "%s unravelled exception %s" e (.getNextException e)))))
 
