@@ -1,7 +1,7 @@
 (ns prosper.collection
   (:require [prosper.query :as query]
-            [clojure.data :refer [diff]]
             [clojure.tools.logging :as log]
+            [clojure.string :as string]
             [clj-time.core :refer [now plus] :as t]
             [clj-time.predicates :as pr]
             [clj-time.local :as l]
@@ -37,27 +37,27 @@
   "extract only listings for which amountremaining has decreased"
   [old new-state]
   (let [new-values (->> new-state
+                        ;; next line is dumb
                         (filter #(< (second %) (or (get old (first %)) 100000)))
                         (into {}))
-        deltas (merge-with -
-                           new-values
-                           (select-keys old (keys new-values)))]
+        deltas (merge-with - new-values (select-keys old (keys new-values)))]
     [new-values deltas]))
 
 (defn log-deltas
   [deltas]
-  (doseq [[k v] deltas]
-    (log/infof
-      "updating market state for %s: delta = %s" k v)))
+  (->> deltas
+       (map #(format "%s: %s, " (first %) (second %)))
+       (string/join #" ")
+       (log/infof "updating market state: %s")))
 
 (defn update-state
   [new-listings]
-  (let [new-amounts (->> new-listings
-                         (map #(select-keys % [:ListingNumber :AmountRemaining]))
-                         (reduce #(assoc %1 (:ListingNumber %2) (:AmountRemaining %2)) {}))]
+  (let [s' (->> new-listings
+                (map #(select-keys % [:ListingNumber :AmountRemaining]))
+                (reduce #(assoc %1 (:ListingNumber %2) (:AmountRemaining %2)) {}))]
     (swap! market-state
            (fn [s]
-             (let [[diffs deltas] (value-diffs s new-amounts)]
+             (let [[diffs deltas] (value-diffs s s')]
                (when-not (empty? deltas)
                  (log-deltas deltas))
                (merge s diffs))))))
@@ -65,18 +65,13 @@
 (defn start-async-consumers
   [num-consumers future-ch]
   (dotimes [_ num-consumers]
-    (as/thread
-      (while true
-        (let [item (query/parse-body @(as/<!! future-ch))]
-          (let [updated (update-state item)]
-            (jdbcd/with-connection *db*
-              (storage/store-listings! *db* item))))))))
+    (as/thread (while true
+                 (let [item (query/parse-body @(as/<!! future-ch))]
+                   (jdbcd/with-connection *db*
+                     (storage/store-listings! *db* item)))))))
 
 (defn query-and-store
   []
-  (let [future-ch (as/chan 40)
-        future-depth (atom 0)
-        listing-ch (as/chan 500)
-        listing-depth (atom 0)]
+  (let [future-ch (as/chan 40)]
     (start-async-producer future-ch)
     (start-async-consumers *storage-threads* future-ch)))
