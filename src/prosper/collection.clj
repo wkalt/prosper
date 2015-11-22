@@ -33,14 +33,22 @@
       (Thread/sleep (if (in-release?) *release-rate* *base-rate*))
       (as/>!! future-ch (query/kit-get "Listings")))))
 
-(println *base-rate*)
-
 (defn value-diffs
   "extract only listings for which amountremaining has decreased"
   [old new-state]
-  (->> new-state
-       (filter #(< (second %) (or (get old (first %)) 100000)))
-       (into {})))
+  (let [new-values (->> new-state
+                        (filter #(< (second %) (or (get old (first %)) 100000)))
+                        (into {}))
+        deltas (merge-with -
+                           new-values
+                           (select-keys old (keys new-values)))]
+    [new-values deltas]))
+
+(defn log-deltas
+  [deltas]
+  (doseq [d deltas]
+    (log/infof
+      "updating market state for %s: delta = %s" (first d) (second d))))
 
 (defn update-state
   [new-listings]
@@ -49,10 +57,12 @@
                          (reduce #(assoc %1 (:ListingNumber %2) (:AmountRemaining %2)) {}))]
     (swap! market-state
            (fn [s]
-             (let [diffs (value-diffs s new-amounts)]
-               (println "DIFFS ARE" diffs)
-               (println "state diff" (diff diffs s))
-               (merge diffs s))))))
+             (let [[diffs deltas] (value-diffs s new-amounts)]
+               (when-not (empty? deltas)
+                 (log-deltas deltas))
+               (merge s diffs))))))
+
+;(get @market-state 3838672)
 
 (defn start-async-consumers
   [num-consumers future-ch]
