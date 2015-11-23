@@ -47,8 +47,8 @@
 
 (defn munge-event
   [{:keys [AmountRemaining AmountParticipation
-           ListingAmountFunded ListingNumber]}]
-  {:timestamp (to-timestamp (now))
+           ListingAmountFunded ListingNumber LastUpdatedDate]}]
+  {:timestamp LastUpdatedDate
    :amount_participation AmountParticipation
    :listing_amount_funded ListingAmountFunded
    :amountremaining AmountRemaining
