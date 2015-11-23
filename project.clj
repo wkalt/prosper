@@ -22,6 +22,7 @@
                  [puppetlabs/trapperkeeper-webserver-jetty9 ~tk-jetty9-version]]
 
   :profiles {:dev {:dependencies [[puppetlabs/trapperkeeper ~tk-version :classifier "test" :scope "test"]
+                                  [puppetlabs/kitchensink ~ks-version :classifier "test" :scope "test"]
                                   [javax.servlet/servlet-api "2.5"]
                                   [ring-mock "0.1.5"]]}}
 
