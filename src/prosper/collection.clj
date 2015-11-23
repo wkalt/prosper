@@ -77,7 +77,7 @@
              (let [[diffs deltas] (value-diffs s s')]
                (when-not (empty? deltas)
                  (log-deltas deltas))
-               (merge s diffs))))))
+               (merge (select-keys s (keys s')) diffs))))))
 
 (defn start-async-consumers
   [num-consumers future-ch market-state]
