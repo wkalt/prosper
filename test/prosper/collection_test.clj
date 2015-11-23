@@ -28,4 +28,12 @@
       (let [listings'' [{:ListingNumber 234 :AmountRemaining 94 :ProsperRating "A" :LenderYield 9.4}]]
         (update-state listings'' market-state)
         (is (= @market-state
-               {234 {:AmountRemaining 94 :ProsperRating "A" :LenderYield 9.4}}))))))
+               {234 {:AmountRemaining 94 :ProsperRating "A" :LenderYield 9.4}}))))
+
+    (testing "new listings appear in state"
+      (let [listings''' [{:ListingNumber 234 :AmountRemaining 94 :ProsperRating "A" :LenderYield 9.4}
+                         {:ListingNumber 345 :AmountRemaining 10 :ProsperRating "A" :LenderYield 9.4} ]]
+        (update-state listings''' market-state)
+        (is (= @market-state
+               {234 {:AmountRemaining 94 :ProsperRating "A" :LenderYield 9.4}
+                345 {:AmountRemaining 10 :ProsperRating "A" :LenderYield 9.4}}))))))
