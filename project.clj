@@ -2,7 +2,7 @@
 (def tk-version "1.0.1")
 (def tk-jetty9-version "1.0.0")
 
-(defproject prosper/prosper "0.1.1-SNAPSHOT"
+(defproject prosper/prosper "0.1.2-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
