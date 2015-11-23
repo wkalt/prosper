@@ -37,7 +37,8 @@
   [delta]
   (let [listingnumber (first delta)
         {:keys [ProsperRating LenderYield AmountRemaining]} (second delta)]
-    (log/infof "updating market state: %s: (%s / %s / %s), " listingnumber ProsperRating LenderYield AmountRemaining)))
+    (log/infof "updating market state: %s: (%s / %s / %s)"
+               listingnumber ProsperRating LenderYield AmountRemaining)))
 
 (defn log-deltas
   [deltas]
@@ -69,7 +70,7 @@
     [new-values deltas]))
 
 (defn update-state
-  [new-listings]
+  [new-listings market-state]
   (let [s' (listings->market-state new-listings)]
     (swap! market-state
            (fn [s]
@@ -79,16 +80,16 @@
                (merge s diffs))))))
 
 (defn start-async-consumers
-  [num-consumers future-ch]
+  [num-consumers future-ch market-state]
   (dotimes [_ num-consumers]
     (as/thread (while true
                  (let [item (query/parse-body @(as/<!! future-ch))]
                    (jdbcd/with-connection *db*
-                     (update-state item)
+                     (update-state item market-state)
                      (storage/store-listings! *db* item)))))))
 
 (defn query-and-store
   []
   (let [future-ch (as/chan 40)]
     (start-async-producer future-ch)
-    (start-async-consumers *storage-threads* future-ch)))
+    (start-async-consumers *storage-threads* future-ch market-state)))
