@@ -44,13 +44,6 @@
   (doseq [d deltas]
     (log-delta d)))
 
-(defn weak-
-  [a b]
-  (try
-    (- a b)
-    (catch Exception _
-      a)))
-
 (defn coalesce-state
   [acc listing]
   (assoc acc (:ListingNumber listing)
@@ -61,6 +54,17 @@
   (->> listings
        (reduce coalesce-state {})))
 
+(defn weak-
+  [a b]
+  (try
+    (- a b)
+    (catch Exception _
+      a)))
+
+(defn subtract-amounts-remaining
+  [a b]
+  (assoc a (- (:AmountRemaining a) (:AmountRemaining b))))
+
 (defn value-diffs
   "extract only listings for which amountremaining has decreased"
   [old new-state]
@@ -68,7 +72,7 @@
                         ;; next line is dumb
                         (filter #(< (:AmountRemaining (second %)) (or (:AmountRemaining (get old (first %))) 100000)))
                         (into {}))
-        deltas (merge-with (partial merge-with weak-) new-values (select-keys old (keys new-values)))]
+        deltas (merge-with (partial merge-with subtract-amounts-remaining) new-values (select-keys old (keys new-values)))]
     [new-values deltas]))
 
 (defn update-state
