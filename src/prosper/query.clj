@@ -46,11 +46,7 @@
     (swap! access-token (constantly access_token))
     (swap! refresh-token (constantly refresh_token))))
 
-(defn kit-wrap
-  [query-string]
-  (let [headers {"Authorization" (str "bearer " @access-token)}]
-    (kit/get query-string {:accept :json :headers headers})))
-
 (defn kit-get
   ([endpoint]
-   (kit-wrap (str base-url endpoint))))
+   (let [headers {"Authorization" (str "bearer " @access-token)}]
+     (kit/get (str base-url endpoint) {:accept :json :headers headers}))))
