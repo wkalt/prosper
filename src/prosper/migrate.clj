@@ -5,17 +5,22 @@
             [clojure.set :refer [difference]]
             [clj-time.coerce :refer [to-timestamp]]
             [clojure.tools.logging :as log]
-            [prosper.fields :refer [fields]]
+            [prosper.fields :refer [legacy-fields legacy->v1-conversions cb-fields]]
+            [clojure.string :refer [lower-case]]
             [clojure.walk :refer [stringify-keys]]
             [prosper.config :refer [*config*]]
             [prosper.query :as q]))
 
+(defn rename-column
+  [t [x y]]
+  (when (not= (lower-case (name x)) (lower-case y))
+    (format "ALTER TABLE %s RENAME COLUMN %s TO %s" t (name x) y)))
+
 (defn initial-migration
   []
-
   (jdbcd/do-commands
     (apply jdbcd/create-table-ddl :listings
-           (-> fields
+           (-> legacy-fields
                (assoc "listingnumber" "bigint not null primary key")
                stringify-keys
                seq)))
@@ -45,8 +50,21 @@
     ["migration" "integer not null primary key"]
     ["time" "timestamp not null"]))
 
+(defn migrate-to-v1-fields
+  []
+  (apply jdbcd/do-commands
+         (filter (comp not nil?)
+                 (map (partial rename-column "listings")
+                      legacy->v1-conversions)))
+
+  (jdbcd/do-commands
+    "ALTER TABLE events RENAME COLUMN listingnumber TO listing_number"
+    "ALTER TABLE events RENAME COLUMN amountremaining TO amount_remaining"
+    "ALTER TABLE events RENAME COLUMN listing_amount_funded TO amount_funded"))
+
 (def migrations
-  {1 initial-migration})
+  {1 initial-migration
+   2 migrate-to-v1-fields})
 
 (defn record-migration!
   [migration]

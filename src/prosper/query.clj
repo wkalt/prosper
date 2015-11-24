@@ -2,10 +2,10 @@
   (:require [clj-http.client :as http]
             [org.httpkit.client :as kit]
             [clojure.tools.logging :as log]
-            [prosper.config :refer [*user* *pw*]]
+            [prosper.config :refer [*user* *pw* *client-id* *client-secret*]]
             [cheshire.core :as json]))
 
-(def base-url "https://api.prosper.com/api/")
+(def base-url "https://api.sandbox.prosper.com/v1/")
 
 (def op-map {">=" "ge"
              "<=" "le"
@@ -13,6 +13,9 @@
              ">" "gt"
              "=" "eg"
              "!=" "neq"})
+
+(def access-token (atom nil))
+(def refresh-token (atom nil))
 
 (declare compile-and)
 (declare compile-eq)
@@ -42,13 +45,39 @@
   [{:keys [status body message] :as response}]
   (if (= 200 status)
     (-> body
-        (json/parse-string true))
+        (json/parse-string true)
+        :result)
     (log/errorf "HTTP request received %s. error is %s body is %s"
                 status (:error response) (:body response))))
 
+(defn request-access-token
+  []
+  (let [{:keys [access_token refresh_token]}
+        (-> (http/post
+              (format "%ssecurity/oauth/token?grant_type=password&client_id=%s&client_secret=%s&username=%s&password=%s"
+                      base-url *client-id* *client-secret* *user* *pw*)
+              {:content-type :json})
+            :body
+            (json/parse-string true))]
+    (swap! access-token (constantly access_token))
+    (swap! refresh-token (constantly refresh_token))))
+
+(defn refresh-access-token
+  []
+  (let [{:keys [access_token refresh_token]}
+        (-> (http/post
+              (format "%ssecurity/oauth/token?grant_type=refresh_token&client_id=%s&client_secret=%s&refresh_token=%s"
+                      base-url *client-id* *client-secret* @refresh-token)
+              {:content-type :json})
+            :body
+            (json/parse-string true))]
+    (swap! access-token (constantly access_token))
+    (swap! refresh-token (constantly refresh_token))))
+
 (defn kit-wrap
   [query-string]
-  (kit/get query-string {:accept :json :basic-auth [*user* *pw*]}))
+  (let [headers {"Authorization" (str "bearer " @access-token)}]
+    (kit/get query-string {:accept :json :headers headers})))
 
 (defn kit-get
   ([endpoint]

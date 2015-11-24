@@ -3,8 +3,8 @@ global {
 }
 
 prosper {
-    username = <prosper username>
-    password = <prosper password>
+    client-id = <client id>
+    client-secret = <client secret>
     release-rate = 333
     base-rate = 6000
     storage-threads = 4

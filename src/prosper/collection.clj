@@ -31,14 +31,14 @@
   (as/thread
     (while true
       (Thread/sleep (if (in-release?) *release-rate* *base-rate*))
-      (as/>!! future-ch (query/kit-get "Listings")))))
+      (as/>!! future-ch (query/kit-get "search/listings")))))
 
 (defn log-delta
   [delta]
-  (let [listingnumber (first delta)
-        {:keys [ProsperRating LenderYield AmountRemaining]} (second delta)]
+  (let [listing_number (first delta)
+        {:keys [prosper_rating lender_yield amount_remaining]} (second delta)]
     (log/infof "updating market state: %s: (%s / %s / %s)"
-               listingnumber ProsperRating LenderYield AmountRemaining)))
+               listing_number prosper_rating lender_yield amount_remaining)))
 
 (defn log-deltas
   [deltas]
@@ -47,8 +47,8 @@
 
 (defn coalesce-state
   [acc listing]
-  (assoc acc (:ListingNumber listing)
-    (select-keys listing [:AmountRemaining :LenderYield :ProsperRating])))
+  (assoc acc (:listing_number listing)
+    (select-keys listing [:amount_remaining :lender_yield :prosper_rating])))
 
 (defn listings->market-state
   [listings]
@@ -57,14 +57,15 @@
 
 (defn subtract-amounts-remaining
   [a b]
-  (assoc a :AmountRemaining (- (:AmountRemaining a) (:AmountRemaining b))))
+  (assoc a :amount_remaining (- (:amount_remaining a) (:amount_remaining b))))
 
 (defn value-diffs
   "extract only listings for which amountremaining has decreased"
   [old new-state]
   (let [new-values (->> new-state
                         ;; next line is dumb
-                        (filter #(< (:AmountRemaining (second %)) (or (:AmountRemaining (get old (first %))) 100000)))
+                        (filter #(< (:amount_remaining (second %))
+                                    (or (:amount_remaining (get old (first %))) 100000)))
                         (into {}))
         deltas (merge-with subtract-amounts-remaining new-values (select-keys old (keys new-values)))]
     [new-values deltas]))

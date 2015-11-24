@@ -5,7 +5,7 @@
             [clojure.java.jdbc.deprecated :as jdbcd]
             [clojure.set :as set]
             [clojure.string :as string]
-            [prosper.fields :refer [fields date-fields]]
+            [prosper.fields :refer [v1-fields date-fields]]
             [clj-time.coerce :refer [to-timestamp]]))
 
 (defn mapvals
@@ -17,21 +17,21 @@
   (mapvals to-timestamp (keys date-fields) listing))
 
 (defn insert-statement
-  [{:keys [listingnumber timestamp amount_participation
-           amountremaining listing_amount_funded]}]
+  [{:keys [listing_number timestamp amount_participation
+           amount_remaining amount_funded]}]
   (format "(%s,'%s',%s,%s,%s)"
-          listingnumber
+          listing_number
           timestamp
           amount_participation
-          amountremaining
-          listing_amount_funded))
+          amount_remaining
+          amount_funded))
 
 (defn update-events!
   [events]
   (try
     (let [query "INSERT INTO events
-                 (listingnumber, timestamp, amount_participation,
-                 amountremaining, listing_amount_funded)
+                 (listing_number, timestamp, amount_participation,
+                 amount_remaining, amount_funded)
                  VALUES %s ON CONFLICT DO NOTHING"
           n (->> (map insert-statement events)
                  (string/join ",")
@@ -46,13 +46,13 @@
                   (.getNextException e)))))
 
 (defn munge-event
-  [{:keys [AmountRemaining AmountParticipation
-           ListingAmountFunded ListingNumber LastUpdatedDate]}]
-  {:timestamp LastUpdatedDate
-   :amount_participation AmountParticipation
-   :listing_amount_funded ListingAmountFunded
-   :amountremaining AmountRemaining
-   :listingnumber ListingNumber})
+  [{:keys [amount_remaining amount_participation
+           amount_funded listing_number last_updated_date]}]
+  {:timestamp (to-timestamp (now))
+   :amount_participation amount_participation
+   :amount_funded amount_funded
+   :amount_remaining amount_remaining
+   :listing_number listing_number})
 
 (defn store-events!
   "This function is not done"
@@ -63,14 +63,14 @@
   [table column values db]
   (let [query (format "select %s from %s where %s in (%s)"
                       column table column (string/join "," values))]
-    (map :listingnumber (jdbc/query db query))))
+    (map :listing_number (jdbc/query db query))))
 
 (defn store-listings
   [listings-to-store]
   (log/debug "storing listings")
   (try
     (->> listings-to-store
-         (map #(select-keys % (conj (keys fields) :ListingNumber)))
+         (map #(select-keys % (conj (keys v1-fields) :listing_number)))
          (map update-time-fields)
          (apply (partial jdbcd/insert-records :listings)))
     (catch Exception e
@@ -83,12 +83,12 @@
    (store-listings! db listings true))
   ([db listings store-events?]
    (jdbc/with-db-transaction [connection db]
-     (when-let [new-listings (seq (map :ListingNumber listings))]
-       (let [existing-listings (existing-entries "listings" "listingnumber"
+     (when-let [new-listings (seq (map :listing_number listings))]
+       (let [existing-listings (existing-entries "listings" "listing_number"
                                                  new-listings db)
-             new-listingnumbers (set/difference (set new-listings)
+             new-listing_numbers (set/difference (set new-listings)
                                                 (set existing-listings))
-             listings-to-store (filter (comp new-listingnumbers :ListingNumber)
+             listings-to-store (filter (comp new-listing_numbers :listing_number)
                                        listings)]
          (if (empty? listings-to-store)
            (log/debug "no new listings")

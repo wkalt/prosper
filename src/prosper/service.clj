@@ -6,6 +6,7 @@
             [prosper.collection :as collection]
             [prosper.migrate :as migrate]
             [prosper.config :refer [load-config!]]
+            [prosper.query :refer [request-access-token]]
             [puppetlabs.trapperkeeper.core :as trapperkeeper]
             [puppetlabs.trapperkeeper.services :as tk-services]))
 
@@ -36,4 +37,6 @@
                                (core/app (tk-services/get-service
                                            this :HelloService))))
            (assoc context :url-prefix url-prefix)
+           (log/info "Requesting access token")
+           (request-access-token)
            (start-prosper-service context config this get-route))))
