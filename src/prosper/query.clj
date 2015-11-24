@@ -11,13 +11,11 @@
 (def refresh-token (atom nil))
 
 (defn parse-body
-  [{:keys [status body message] :as response}]
+  [{:keys [status body error]}]
   (if (= 200 status)
-    (-> body
-        (json/parse-string true)
-        :result)
-    (log/errorf "HTTP request received %s. error is %s body is %s"
-                status (:error response) (:body response))))
+    (:result (json/parse-string body true))
+    (log/errorf
+      "HTTP request received %s. error is %s body is %s" status error body)))
 
 (defn request-access-token
   []
