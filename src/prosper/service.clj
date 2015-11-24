@@ -6,9 +6,9 @@
             [prosper.collection :as collection]
             [prosper.migrate :as migrate]
             [prosper.config :refer [load-config!]]
-            [prosper.query :refer [request-access-token]]
+            [prosper.query :refer [request-access-token refresh-access-token]]
             [puppetlabs.trapperkeeper.core :as trapperkeeper]
-            [overtone.atat :as atat]
+            [overtone.at-at :as atat]
             [puppetlabs.trapperkeeper.services :as tk-services]))
 
 (defn start-prosper-service
@@ -41,5 +41,5 @@
            (assoc context :url-prefix url-prefix)
            (log/info "Requesting access token")
            (request-access-token)
-           (every (* 60 60 1000) (refresh-access-token) cred-refresh-pool)
+           (atat/every (* 60 60 1000) refresh-access-token cred-refresh-pool)
            (start-prosper-service context config this get-route))))
