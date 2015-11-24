@@ -3,6 +3,7 @@
 ## immediate
 * remove unused ns's
 * tests
+* fix the stupid linebreaks in query.clj
 
 ## phase 1
 * input schema validation
