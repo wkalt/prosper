@@ -7,39 +7,8 @@
 
 (def base-url "https://api.sandbox.prosper.com/v1/")
 
-(def op-map {">=" "ge"
-             "<=" "le"
-             "<" "lt"
-             ">" "gt"
-             "=" "eg"
-             "!=" "neq"})
-
 (def access-token (atom nil))
 (def refresh-token (atom nil))
-
-(declare compile-and)
-(declare compile-eq)
-
-(defmulti compile-term
-  (fn [a &] (type a)))
-
-(defmethod compile-term clojure.lang.PersistentVector
-  [[a b c]]
-  (case a
-    "and" (compile-and [a b c])
-    (">=" "<=" "<" ">" "!=" "=") (compile-eq [a b c])))
-
-(defmethod compile-term :default
-  [x]
-  (if (string? x) (format "'%s'" x) (str x)))
-
-(defn compile-eq
-  [[op a b]]
-  (format "%s+%s+%s" a (get op-map op) (compile-term b)))
-
-(defn compile-and
-  [[_ a b]]
-  (format "%s+and+%s" (compile-term a) (compile-term b)))
 
 (defn parse-body
   [{:keys [status body message] :as response}]
@@ -52,25 +21,28 @@
 
 (defn request-access-token
   []
-  (let [{:keys [access_token refresh_token]}
-        (-> (http/post
-              (format "%ssecurity/oauth/token?grant_type=password&client_id=%s&client_secret=%s&username=%s&password=%s"
-                      base-url *client-id* *client-secret* *user* *pw*)
-              {:content-type :json})
-            :body
-            (json/parse-string true))]
-    (swap! access-token (constantly access_token))
-    (swap! refresh-token (constantly refresh_token))))
+  (let [params {:grant_type "password"
+                :client_id *client-id*
+                :client_secret *client-secret*
+                :username *user*
+                :password *pw*}
+        resp (-> (str base-url "security/oauth/token")
+                 (http/post {:form-params params})
+                 :body
+                 (json/parse-string true))]
+    (swap! access-token (constantly (:access_token resp)))
+    (swap! refresh-token (constantly (:refresh_token resp)))))
 
 (defn refresh-access-token
   []
-  (let [{:keys [access_token refresh_token]}
-        (-> (http/post
-              (format "%ssecurity/oauth/token?grant_type=refresh_token&client_id=%s&client_secret=%s&refresh_token=%s"
-                      base-url *client-id* *client-secret* @refresh-token)
-              {:content-type :json})
-            :body
-            (json/parse-string true))]
+  (let [params {:grant_type "refresh_token"
+                :client_id *client-id*
+                :client_secret *client-secret*
+                :refresh_token @refresh-token}
+        resp (-> (str base-url "security/oauth/token")
+                 (http/post {:content-type :json :form-params params})
+                 :body
+                 (json/parse-string true))]
     (swap! access-token (constantly access_token))
     (swap! refresh-token (constantly refresh_token))))
 
@@ -81,6 +53,4 @@
 
 (defn kit-get
   ([endpoint]
-   (kit-wrap (str base-url endpoint)))
-  ([endpoint query]
-   (kit-wrap (format "%s%s?$filter=%s" base-url endpoint (compile-term query)))))
+   (kit-wrap (str base-url endpoint))))
