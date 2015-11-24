@@ -17,8 +17,7 @@
         port (get-in config [:webserver :port])
         url-prefix (get-route service)]
     (log/infof "Hello web service started; visit http://%s:%s%s/world
-                to check it out!"
-               host port url-prefix)
+                to check it out!" host port url-prefix)
     (future (collection/query-and-store))
     context))
 

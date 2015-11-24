@@ -16,7 +16,7 @@
   [listing]
   (mapvals to-timestamp (keys date-fields) listing))
 
-(defn insert-statement
+(defn insert-event-statement
   [{:keys [listing_number timestamp amount_participation
            amount_remaining amount_funded]}]
   (format "(%s,'%s',%s,%s,%s)"
@@ -33,7 +33,7 @@
                  (listing_number, timestamp, amount_participation,
                  amount_remaining, amount_funded)
                  VALUES %s ON CONFLICT DO NOTHING"
-          n (->> (map insert-statement events)
+          n (->> (map insert-event-statement events)
                  (string/join ",")
                  (format query)
                  (jdbcd/do-commands)
