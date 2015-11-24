@@ -4,6 +4,7 @@
 * remove unused ns's
 * tests
 * fix the stupid linebreaks in query.clj
+* move off puppetlabs code
 
 ## phase 1
 * input schema validation
