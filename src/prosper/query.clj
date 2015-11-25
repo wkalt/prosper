@@ -47,11 +47,14 @@
 
 (defn kit-get
   ([endpoint]
-   (let [headers {"Authorization" (str "bearer " @access-token)}]
-     (kit/get (str base-url endpoint) {:accept :json :headers headers}))))
+   (kit/get (str base-url endpoint) {:accept :json :oauth-token @access-token})))
 
 (defn kit-post
   ([endpoint params]
-   (let [headers {"Authorization" (str "bearer " @access-token)}]
-     (kit/post (str base-url endpoint)
-               {:accept :json :headers headers :form-params params}))))
+   (kit/post (str base-url endpoint)
+             (merge params
+                    {:content-type :json :accept :json :oauth-token @access-token}))))
+
+(def foo @(kit-post "orders" {:bid_requests [{"bid_amount" 25.0 "listing_id" 988720}]}))
+
+(println foo)
