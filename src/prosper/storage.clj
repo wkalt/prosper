@@ -42,12 +42,12 @@
         (log/infof "Inserted %s new events" n)
         (log/debug "No new events")))
     (catch Exception e
-      (log/errorf "%s unravelled exception %s" e
-                  (.getNextException e)))))
+      (log/errorf "%s unravelled exception %s" e (.getNextException e)))))
 
 (defn munge-event
   [{:keys [amount_remaining amount_participation
            amount_funded listing_number last_updated_date]}]
+  ;; this needs to change when last_updated_date is available
   {:timestamp (to-timestamp (now))
    :amount_participation amount_participation
    :amount_funded amount_funded

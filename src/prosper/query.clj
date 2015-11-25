@@ -41,10 +41,17 @@
                  (http/post {:content-type :json :form-params params})
                  :body
                  (json/parse-string true))]
-    (swap! access-token (constantly access_token))
-    (swap! refresh-token (constantly refresh_token))))
+    (log/info "Refreshing access token")
+    (swap! access-token (constantly (:access_token resp)))
+    (swap! refresh-token (constantly (:refresh_token resp)))))
 
 (defn kit-get
   ([endpoint]
    (let [headers {"Authorization" (str "bearer " @access-token)}]
      (kit/get (str base-url endpoint) {:accept :json :headers headers}))))
+
+(defn kit-post
+  ([endpoint params]
+   (let [headers {"Authorization" (str "bearer " @access-token)}]
+     (kit/post (str base-url endpoint)
+               {:accept :json :headers headers :form-params params}))))
