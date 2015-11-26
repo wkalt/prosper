@@ -4,6 +4,7 @@
 * tests
 * investment code
 * non-storage namespaces should not reference jdbc
+* move all config handling to environ
 
 ## phase 1
 * input schema validation
