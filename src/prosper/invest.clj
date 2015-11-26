@@ -2,6 +2,7 @@
   (:require [prosper.query :as query]
             [prosper.storage :as storage]
             [prosper.config :refer [*db*]]
+            [clojure.java.jdbc.deprecated :as jdbcd]
             [clojure.tools.logging :as log]))
 
 (defn invest!
@@ -14,7 +15,5 @@
         {:keys [order_id order_date bid_requests]} resp
         total (reduce + (map :bid_amount bid_requests))]
     (log/infof "Submitted order %s for %s at %s" order_id total order_date)
-;    (storage/store-investment! resp *db*))
-)
-
-;(invest! [{:bid_amount 25 :listing_id 994406}])
+    (jdbcd/with-connection *db*
+      (storage/store-investment! resp *db*))))

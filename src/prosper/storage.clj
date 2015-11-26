@@ -2,6 +2,7 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as log]
             [clj-time.core :refer [now]]
+            [clj-time.format :as f]
             [clojure.java.jdbc.deprecated :as jdbcd]
             [clojure.set :as set]
             [cheshire.core :as json]
@@ -99,12 +100,16 @@
          (when store-events?
            (store-events! listings)))))))
 
-;(defn store-investment!
-;  [response db]
-;  (jdbcd/with-connection db
-;    (jdbc/with-db-transaction [connection db]
-;      (-> response
-;          (update-in [:bid_requests] json/generate-string)
-;          (update-in [:order_date] to-timestamp)
-;          #(jdbcd/insert-record :investments %))
-;      (log/infof "stored investment %s" (:order_id response)))))
+(defn parse-order-date
+  [stamp]
+  (to-timestamp
+    (f/parse (f/formatter "yyyy-MM-dd HH:mm:ss Z") stamp)))
+
+(defn store-investment!
+  [response db]
+  (jdbc/with-db-transaction [connection db]
+    (let [row (-> response
+                  (update-in [:bid_requests] json/generate-string)
+                  (update-in [:order_date] (comp to-timestamp parse-order-date)))]
+      (jdbcd/insert-record :investments row))
+    (log/infof "stored investment %s" (:order_id response))))
