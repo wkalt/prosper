@@ -4,6 +4,7 @@
             [clj-time.core :refer [now]]
             [clojure.java.jdbc.deprecated :as jdbcd]
             [clojure.set :as set]
+            [cheshire.core :as json]
             [clojure.string :as string]
             [prosper.fields :refer [v1-fields date-fields]]
             [clj-time.coerce :refer [to-timestamp]]))
@@ -97,3 +98,13 @@
                                  (count listings-to-store)))))
          (when store-events?
            (store-events! listings)))))))
+
+;(defn store-investment!
+;  [response db]
+;  (jdbcd/with-connection db
+;    (jdbc/with-db-transaction [connection db]
+;      (-> response
+;          (update-in [:bid_requests] json/generate-string)
+;          (update-in [:order_date] to-timestamp)
+;          #(jdbcd/insert-record :investments %))
+;      (log/infof "stored investment %s" (:order_id response)))))

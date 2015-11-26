@@ -3,6 +3,7 @@
 ## immediate
 * tests
 * investment code
+* non-storage namespaces should not reference jdbc
 
 ## phase 1
 * input schema validation

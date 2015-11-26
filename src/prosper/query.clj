@@ -62,3 +62,5 @@
     (json/parse-string body true)
     (log/errorf
       "HTTP request received %s. error is %s body is %s" status error body)))
+
+(println @(kit-get "search/listings"))

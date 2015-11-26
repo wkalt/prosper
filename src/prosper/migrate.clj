@@ -62,9 +62,32 @@
     "ALTER TABLE events RENAME COLUMN amountremaining TO amount_remaining"
     "ALTER TABLE events RENAME COLUMN listing_amount_funded TO amount_funded"))
 
+(defn drop-amountremaining
+  []
+  (jdbcd/do-commands
+    "DROP TABLE amountremaining"))
+
+(defn create-investments-table
+  []
+  (jdbcd/create-table
+    :investments
+    ["order_id" "varchar(40) unique not null primary key"]
+    ["bid_requests" "text"]
+    ["effective_yield" "numeric"]
+    ["estimated_loss" "numeric"]
+    ["estimated_return" "numeric"]
+    ["order_status" "text"]
+    ["source" "text"]
+    ["order_date" "timestamp not null"])
+  (jdbcd/do-commands
+    "create index investment_order_date_idx on investments(order_date)"))
+
 (def migrations
   {1 initial-migration
-   2 migrate-to-v1-fields})
+   2 migrate-to-v1-fields
+   3 drop-amountremaining
+   4 create-investments-table
+   })
 
 (defn record-migration!
   [migration]
