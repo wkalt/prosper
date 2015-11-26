@@ -84,21 +84,22 @@
   ([db listings]
    (store-listings! db listings true))
   ([db listings store-events?]
-   (jdbc/with-db-transaction [connection db]
-     (when-let [new-listings (seq (map :listing_number listings))]
-       (let [existing-listings (existing-entries "listings" "listing_number"
-                                                 new-listings db)
-             new-listing_numbers (set/difference (set new-listings)
-                                                (set existing-listings))
-             listings-to-store (filter (comp new-listing_numbers :listing_number)
-                                       listings)]
-         (if (empty? listings-to-store)
-           (log/debug "no new listings")
-           (do (store-listings listings-to-store)
-               (log/info (format "stored %s new listings"
-                                 (count listings-to-store)))))
-         (when store-events?
-           (store-events! listings)))))))
+   (jdbcd/with-connection db
+     (jdbc/with-db-transaction [connection db]
+       (when-let [new-listings (seq (map :listing_number listings))]
+         (let [existing-listings (existing-entries "listings" "listing_number"
+                                                   new-listings db)
+               new-listing_numbers (set/difference (set new-listings)
+                                                   (set existing-listings))
+               listings-to-store (filter (comp new-listing_numbers :listing_number)
+                                         listings)]
+           (if (empty? listings-to-store)
+             (log/debug "no new listings")
+             (do (store-listings listings-to-store)
+                 (log/info (format "stored %s new listings"
+                                   (count listings-to-store)))))
+           (when store-events?
+             (store-events! listings))))))))
 
 (defn parse-order-date
   [stamp]
@@ -107,9 +108,10 @@
 
 (defn store-investment!
   [response db]
-  (jdbc/with-db-transaction [connection db]
-    (let [row (-> response
-                  (update-in [:bid_requests] json/generate-string)
-                  (update-in [:order_date] (comp to-timestamp parse-order-date)))]
-      (jdbcd/insert-record :investments row))
-    (log/infof "stored investment %s" (:order_id response))))
+  (jdbcd/with-connection db
+    (jdbc/with-db-transaction [connection db]
+      (let [row (-> response
+                    (update-in [:bid_requests] json/generate-string)
+                    (update-in [:order_date] (comp to-timestamp parse-order-date)))]
+        (jdbcd/insert-record :investments row))
+      (log/infof "stored investment %s" (:order_id response)))))

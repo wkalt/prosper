@@ -15,5 +15,4 @@
         {:keys [order_id order_date bid_requests]} resp
         total (reduce + (map :bid_amount bid_requests))]
     (log/infof "Submitted order %s for %s at %s" order_id total order_date)
-    (jdbcd/with-connection *db*
-      (storage/store-investment! resp *db*))))
+    (storage/store-investment! resp *db*)))

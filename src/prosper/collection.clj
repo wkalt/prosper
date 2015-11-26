@@ -85,9 +85,8 @@
   (dotimes [_ num-consumers]
     (as/thread (while true
                  (let [item (query/parse-body @(as/<!! future-ch))]
-                   (jdbcd/with-connection *db*
-                     (update-state item market-state)
-                     (storage/store-listings! *db* item)))))))
+                   (update-state item market-state)
+                   (storage/store-listings! *db* item))))))
 
 (defn query-and-store
   []
