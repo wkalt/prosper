@@ -40,5 +40,5 @@
            (assoc context :url-prefix url-prefix)
            (log/info "Requesting access token")
            (request-access-token)
-           (atat/every (* 60 60 1000) refresh-access-token cred-refresh-pool)
+           (atat/every (* 10 60 1000) refresh-access-token cred-refresh-pool)
            (start-prosper-service context config this get-route))))

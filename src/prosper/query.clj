@@ -38,7 +38,8 @@
                 :client_secret *client-secret*
                 :refresh_token @refresh-token}
         resp (-> (str base-url "security/oauth/token")
-                 (http/post {:content-type :json :form-params params})
+                 (http/post {:headers {"Content-Type" "application/x-www-form-urlencoded"}
+                             :form-params params :oauth-token @access-token})
                  :body
                  (json/parse-string true))]
     (log/info "Refreshing access token")
@@ -49,12 +50,15 @@
   ([endpoint]
    (kit/get (str base-url endpoint) {:accept :json :oauth-token @access-token})))
 
-(defn kit-post
+(defn http-post
   ([endpoint params]
-   (kit/post (str base-url endpoint)
-             (merge params
-                    {:content-type :json :accept :json :oauth-token @access-token}))))
+   (http/post (str base-url endpoint)
+              {:oauth-token @access-token :content-type :json
+               :form-params params})))
 
-(def foo @(kit-post "orders" {:bid_requests [{"bid_amount" 25.0 "listing_id" 988720}]}))
-
-(println foo)
+(defn parse-post-body
+  [{:keys [status body error]}]
+  (if (= 200 status)
+    (json/parse-string body true)
+    (log/errorf
+      "HTTP request received %s. error is %s body is %s" status error body)))

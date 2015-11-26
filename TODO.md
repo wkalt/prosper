@@ -1,10 +1,8 @@
 **TODO**:
 
 ## immediate
-* remove unused ns's
 * tests
-* fix the stupid linebreaks in query.clj
-* move off puppetlabs code
+* investment code
 
 ## phase 1
 * input schema validation
@@ -12,7 +10,7 @@
 
 ## phase 2
 * web interface / investment tracking / reporting
-* investment functions
+* move off puppetlabs code
 
 ## phase 3 (maybe concurrent with 2)
 * historical data analysis and selection model development
