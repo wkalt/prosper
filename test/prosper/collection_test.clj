@@ -5,35 +5,35 @@
 (deftest state-update
   []
   (let [market-state (atom {})
-        listings [{:ListingNumber 123 :AmountRemaining 10 :ProsperRating "A" :LenderYield 9.4}
-                  {:ListingNumber 234 :AmountRemaining 94 :ProsperRating "A" :LenderYield 9.4}
-                  {:ListingNumber 345 :AmountRemaining 99 :ProsperRating "A" :LenderYield 9.4}]]
+        listings [{:listing_number 123 :amount_remaining 10 :prosper_rating "A" :lender_yield 9.4}
+                  {:listing_number 234 :amount_remaining 94 :prosper_rating "A" :lender_yield 9.4}
+                  {:listing_number 345 :amount_remaining 99 :prosper_rating "A" :lender_yield 9.4}]]
     (update-state listings market-state)
     (testing "state was updated"
       (is (= @market-state
-             {123 {:AmountRemaining 10 :ProsperRating "A" :LenderYield 9.4}
-              234 {:AmountRemaining 94 :ProsperRating "A" :LenderYield 9.4}
-              345 {:AmountRemaining 99 :ProsperRating "A" :LenderYield 9.4}})))
+             {123 {:amount_remaining 10 :prosper_rating "A" :lender_yield 9.4}
+              234 {:amount_remaining 94 :prosper_rating "A" :lender_yield 9.4}
+              345 {:amount_remaining 99 :prosper_rating "A" :lender_yield 9.4}})))
 
     (testing "new listings update amountremaining"
-      (let [listings' [{:ListingNumber 123 :AmountRemaining 5 :ProsperRating "A" :LenderYield 9.4}
-                       {:ListingNumber 234 :AmountRemaining 94 :ProsperRating "A" :LenderYield 9.4}
-                       {:ListingNumber 345 :AmountRemaining 99 :ProsperRating "A" :LenderYield 9.4}]]
+      (let [listings' [{:listing_number 123 :amount_remaining 5 :prosper_rating "A" :lender_yield 9.4}
+                       {:listing_number 234 :amount_remaining 94 :prosper_rating "A" :lender_yield 9.4}
+                       {:listing_number 345 :amount_remaining 99 :prosper_rating "A" :lender_yield 9.4}]]
         (update-state listings' market-state)
         (is (= @market-state
-               {123 {:AmountRemaining 5 :ProsperRating "A" :LenderYield 9.4}
-                234 {:AmountRemaining 94 :ProsperRating "A" :LenderYield 9.4}
-                345 {:AmountRemaining 99 :ProsperRating "A" :LenderYield 9.4}}))))
+               {123 {:amount_remaining 5 :prosper_rating "A" :lender_yield 9.4}
+                234 {:amount_remaining 94 :prosper_rating "A" :lender_yield 9.4}
+                345 {:amount_remaining 99 :prosper_rating "A" :lender_yield 9.4}}))))
     (testing "funded listings disappear from state"
-      (let [listings'' [{:ListingNumber 234 :AmountRemaining 94 :ProsperRating "A" :LenderYield 9.4}]]
+      (let [listings'' [{:listing_number 234 :amount_remaining 94 :prosper_rating "A" :lender_yield 9.4}]]
         (update-state listings'' market-state)
         (is (= @market-state
-               {234 {:AmountRemaining 94 :ProsperRating "A" :LenderYield 9.4}}))))
+               {234 {:amount_remaining 94 :prosper_rating "A" :lender_yield 9.4}}))))
 
     (testing "new listings appear in state"
-      (let [listings''' [{:ListingNumber 234 :AmountRemaining 94 :ProsperRating "A" :LenderYield 9.4}
-                         {:ListingNumber 345 :AmountRemaining 10 :ProsperRating "A" :LenderYield 9.4} ]]
+      (let [listings''' [{:listing_number 234 :amount_remaining 94 :prosper_rating "A" :lender_yield 9.4}
+                         {:listing_number 345 :amount_remaining 10 :prosper_rating "A" :lender_yield 9.4} ]]
         (update-state listings''' market-state)
         (is (= @market-state
-               {234 {:AmountRemaining 94 :ProsperRating "A" :LenderYield 9.4}
-                345 {:AmountRemaining 10 :ProsperRating "A" :LenderYield 9.4}}))))))
+               {234 {:amount_remaining 94 :prosper_rating "A" :lender_yield 9.4}
+                345 {:amount_remaining 10 :prosper_rating "A" :lender_yield 9.4}}))))))
