@@ -38,7 +38,6 @@
                                (core/app (tk-services/get-service
                                            this :HelloService))))
            (assoc context :url-prefix url-prefix)
-           (log/info "Requesting access token")
            (request-access-token)
            (atat/every (* 20 60 1000) request-access-token cred-refresh-pool)
            (start-prosper-service context config this get-route))))
