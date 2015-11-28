@@ -12,7 +12,7 @@
 
 (defn mapvals
   ([f m] (into {} (for [[k v] m] [k (f v)])))
-  ([f ks m] (reduce (fn [m k] (update-in m [k] f)) m ks)))
+  ([f ks m] (reduce (fn [m k] (update m k f)) m ks)))
 
 (defn update-time-fields
   [listing]
@@ -111,7 +111,7 @@
   (jdbcd/with-connection db
     (jdbc/with-db-transaction [connection db]
       (let [row (-> response
-                    (update-in [:bid_requests] json/generate-string)
-                    (update-in [:order_date] (comp to-timestamp parse-order-date)))]
+                    (update :bid_requests json/generate-string)
+                    (update :order_date (comp to-timestamp parse-order-date)))]
         (jdbcd/insert-record :investments row))
       (log/infof "stored investment %s" (:order_id response)))))

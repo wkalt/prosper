@@ -4,7 +4,7 @@
 * move off puppetlabs code? (good idea or not?)
 * upgrade to clojure 1.8
 * tests
-* move all config handling to environ
+* move all config handling to environ or get test profile working in tk config
 * investment reconciliation
 
 ## phase 1
