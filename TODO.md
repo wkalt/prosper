@@ -1,18 +1,18 @@
 **TODO**:
 
 ## immediate
-* move off puppetlabs code? (good idea or not?)
-* upgrade to clojure 1.8
 * tests
 * move all config handling to environ or get test profile working in tk config
 * investment reconciliation
+* input schema validation
+* release mode should be based on detection of new loans, rather than times
 
 ## phase 1
-* input schema validation
 * automated package testing
 
 ## phase 2
 * web interface / investment tracking / reporting
+* move off puppetlabs code? (good idea or not?)
 
 ## phase 3 (maybe concurrent with 2)
 * historical data analysis and selection model development

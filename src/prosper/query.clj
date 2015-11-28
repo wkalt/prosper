@@ -18,6 +18,11 @@
     (log/errorf
       "HTTP request received %s. error is %s body is %s" status error body)))
 
+(defn update-tokens!
+  [resp]
+  (swap! access-token (constantly (:access_token resp)))
+  (swap! refresh-token (constantly (:refresh_token resp))))
+
 (defn request-access-token
   []
   (let [params {:grant_type "password"
@@ -28,8 +33,7 @@
         resp (-> (str base-url "security/oauth/token")
                  (http/post {:form-params params})
                  parse-body)]
-    (swap! access-token (constantly (:access_token resp)))
-    (swap! refresh-token (constantly (:refresh_token resp)))
+    (update-tokens! resp)
     (log/infof "Received new access token: expires in %s" (:expires_in resp))))
 
 (defn refresh-access-token
@@ -42,8 +46,7 @@
           resp (-> (str base-url "security/oauth/token")
                    (http/post {:form-params params :oauth-token @access-token})
                    parse-body)]
-      (swap! access-token (constantly (:access_token resp)))
-      (swap! refresh-token (constantly (:refresh_token resp)))
+      (update-tokens! resp)
       (log/infof "Refreshed access token. Expires in %s" (:expires_in resp)))
     (catch Exception e
       (log/error
