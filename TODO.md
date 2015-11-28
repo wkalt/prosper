@@ -1,6 +1,8 @@
 **TODO**:
 
 ## immediate
+* move off puppetlabs code
+* upgrade to clojure 1.8
 * tests
 * move all config handling to environ
 * investment reconciliation
@@ -11,7 +13,6 @@
 
 ## phase 2
 * web interface / investment tracking / reporting
-* move off puppetlabs code
 
 ## phase 3 (maybe concurrent with 2)
 * historical data analysis and selection model development
