@@ -1,7 +1,7 @@
 **TODO**:
 
 ## immediate
-* move off puppetlabs code
+* move off puppetlabs code? (good idea or not?)
 * upgrade to clojure 1.8
 * tests
 * move all config handling to environ

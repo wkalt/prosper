@@ -1,6 +1,6 @@
 (def ks-version "1.0.0")
-(def tk-version "1.0.1")
-(def tk-jetty9-version "1.0.0")
+(def tk-version "1.1.1")
+(def tk-jetty9-version "1.5.0")
 
 (defproject prosper/prosper "0.2.1-SNAPSHOT"
   :description "FIXME: write description"
