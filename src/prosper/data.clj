@@ -6,4 +6,5 @@
 (defn get-investments
   []
   (->> (jdbc/query *db* "select * from investments")
-       (map #(update-in % [:bid_requests] json/parse-string true))))
+       (map #(update-in % [:bid_requests] json/parse-string true))
+       (sort-by :order_date)))

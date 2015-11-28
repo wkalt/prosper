@@ -4,6 +4,7 @@
             [prosper.config :refer [*db*]]
             [clojure.java.jdbc.deprecated :as jdbcd]
             [cheshire.core :as json]
+            [prosper.data :refer [get-investments]]
             [clojure.tools.logging :as log]))
 
 (defn invest!
@@ -17,15 +18,3 @@
         total (reduce + (map :bid_amount bid_requests))]
     (log/infof "Submitted order %s for %s at %s" order_id total order_date)
     (storage/store-investment! resp *db*)))
-
-(defn reconcile-investments!
-  []
-  (let [acknowledged-orders (-> @(kit-get "orders/")
-                                :body
-                                (json/parse-string true))
-        ]
-
-
-    )
-
-  )
