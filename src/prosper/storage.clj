@@ -74,7 +74,8 @@
          (map update-time-fields)
          (apply (partial jdbcd/insert-records :listings)))
     (catch Exception e
-      (log/error (format "Error storing listings:" (.getMessage e))))))
+      (log/errorf "Error storing listings: %s unravelled exception %s"
+                  e (.getNextException e)))))
 
 (defn store-listings!
   "must be called within a db connection"
