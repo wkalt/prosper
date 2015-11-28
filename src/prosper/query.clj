@@ -13,7 +13,8 @@
 (defn parse-body
   [{:keys [status body error]}]
   (if (= 200 status)
-    (:result (json/parse-string body true))
+    (let [body' (json/parse-string body true)]
+      (if (:result body') (:result body') body'))
     (log/errorf
       "HTTP request received %s. error is %s body is %s" status error body)))
 
@@ -26,26 +27,28 @@
                 :password (env :pass)}
         resp (-> (str base-url "security/oauth/token")
                  (http/post {:form-params params})
-                 :body
-                 (json/parse-string true))]
-    (log/info "Requesting access token")
+                 parse-body)]
     (swap! access-token (constantly (:access_token resp)))
-    (swap! refresh-token (constantly (:refresh_token resp)))))
+    (swap! refresh-token (constantly (:refresh_token resp)))
+    (log/infof "Received new access token: expires in %s" (:expires_in resp))))
 
 (defn refresh-access-token
   []
-  (let [params {:grant_type "refresh_token"
-                :client_id (env :client-id)
-                :client_secret (env :client-secret)
-                :refresh_token @refresh-token}
-        resp (-> (str base-url "security/oauth/token")
-                 (http/post {:headers {"Content-Type" "application/x-www-form-urlencoded"}
-                             :form-params params :oauth-token @access-token})
-                 :body
-                 (json/parse-string true))]
-    (log/info "Refreshing access token")
-    (swap! access-token (constantly (:access_token resp)))
-    (swap! refresh-token (constantly (:refresh_token resp)))))
+  (try
+    (let [params {:grant_type "refresh_token"
+                  :client_id (env :client-id)
+                  :client_secret (env :client-secret)
+                  :refresh_token @refresh-token}
+          resp (-> (str base-url "security/oauth/token")
+                   (http/post {:form-params params :oauth-token @access-token})
+                   parse-body)]
+      (swap! access-token (constantly (:access_token resp)))
+      (swap! refresh-token (constantly (:refresh_token resp)))
+      (log/infof "Refreshed access token. Expires in %s" (:expires_in resp)))
+    (catch Exception e
+      (log/error
+        "Caught exception while refreshing access token. Requesting new token.")
+      (request-access-token))))
 
 (defn kit-get
   ([endpoint]
