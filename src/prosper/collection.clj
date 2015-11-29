@@ -22,7 +22,8 @@
 
 (defn log-deltas
   [deltas]
-  (doseq [[listing {:keys [prosper_rating lender_yield amount_remaining]}] deltas]
+  (doseq [[listing {:keys [prosper_rating
+                           lender_yield amount_remaining]}] deltas]
     (log/infof "updating market state: %s: (%s / %s / %s)"
                listing prosper_rating lender_yield amount_remaining)))
 
