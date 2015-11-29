@@ -1,10 +1,7 @@
 (ns prosper.collection
   (:require [prosper.query :as query]
             [clojure.tools.logging :as log]
-            [clj-time.core :refer [now plus interval today-at minutes within?
-                                   before?]]
-            [clj-time.predicates :refer [weekend?]]
-            [clj-time.local :refer [local-now]]
+            [clj-time.core :refer [now before?]]
             [prosper.storage :refer [store-listings! release-end-time]]
             [prosper.config :refer [*db* *release-rate* *base-rate*
                                     *storage-threads*]]
