@@ -5,7 +5,6 @@
 * move all config handling to environ or get test profile working in tk config
 * investment reconciliation
 * input schema validation
-* release mode should be based on detection of new loans, rather than times
 
 ## phase 1
 * automated package testing

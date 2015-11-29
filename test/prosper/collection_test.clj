@@ -1,6 +1,9 @@
 (ns prosper.collection-test
   (:require [clojure.test :refer :all]
-            [prosper.collection :refer :all]))
+            [clj-time.core :refer [now plus minutes minus]]
+            [prosper.collection :refer :all]
+            [prosper.storage :as storage]
+            [clj-time.core :refer [now minutes]]))
 
 (deftest state-update
   []
@@ -37,3 +40,10 @@
         (is (= @market-state
                {234 {:amount_remaining 94 :prosper_rating "A" :lender_yield 9.4}
                 345 {:amount_remaining 10 :prosper_rating "A" :lender_yield 9.4}}))))))
+
+(deftest in-release-test
+  []
+  (with-redefs [storage/release-end-time (atom (plus (now) (minutes 15)))]
+    (is (true? (in-release?)))
+    (reset! storage/release-end-time (minus (now) (minutes 1)))
+    (is (false? (in-release?)))))

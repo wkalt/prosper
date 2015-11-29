@@ -1,7 +1,7 @@
 (ns prosper.storage
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as log]
-            [clj-time.core :refer [now]]
+            [clj-time.core :refer [now minutes plus]]
             [clj-time.format :as f]
             [clojure.java.jdbc.deprecated :as jdbcd]
             [clojure.set :as set]
@@ -9,6 +9,8 @@
             [clojure.string :as string]
             [prosper.fields :refer [v1-fields date-fields]]
             [clj-time.coerce :refer [to-timestamp]]))
+
+(def release-end-time (atom (now)))
 
 (defn mapvals
   ([f m] (into {} (for [[k v] m] [k (f v)])))
@@ -95,7 +97,9 @@
                                          listings)]
            (if (empty? listings-to-store)
              (log/debug "no new listings")
-             (do (store-listings listings-to-store)
+             (do
+               (reset! release-end-time (plus (now) (minutes 15)))
+               (store-listings listings-to-store)
                  (log/info (format "stored %s new listings"
                                    (count listings-to-store)))))
            (when store-events?
