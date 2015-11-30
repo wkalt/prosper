@@ -17,7 +17,7 @@
   [future-ch]
   (as/thread (while true
                (Thread/sleep (if (in-release?) *release-rate* *base-rate*))
-               (as/>!! future-ch (query/kit-get "search/listings")))))
+               (as/>!! future-ch (query/kit-get "search/listings?include_creditbureau_values=true")))))
 
 (defn log-deltas
   [deltas]
