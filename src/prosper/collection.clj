@@ -15,10 +15,9 @@
 
 (defn start-producer
   [future-ch]
-  (as/thread
-    (while true
-      (Thread/sleep (if (in-release?) *release-rate* *base-rate*))
-      (as/>!! future-ch (query/kit-get "search/listings")))))
+  (as/thread (while true
+               (Thread/sleep (if (in-release?) *release-rate* *base-rate*))
+               (as/>!! future-ch (query/kit-get "search/listings")))))
 
 (defn log-deltas
   [deltas]
@@ -53,14 +52,18 @@
                            new-values (select-keys old (keys new-values)))]
     [new-values deltas]))
 
+(defn update-state*
+  [s']
+  (fn [s]
+    (let [[diffs deltas] (value-diffs s s')]
+      (when (seq deltas)
+        (log-deltas deltas))
+      (merge (select-keys s (keys s')) diffs))))
+
 (defn update-state
   [new-listings market-state]
   (let [s' (reduce coalesce-state {} new-listings)]
-    (swap! market-state
-           (fn [s] (let [[diffs deltas] (value-diffs s s')]
-                     (when-not (empty? deltas)
-                       (log-deltas deltas))
-                     (merge (select-keys s (keys s')) diffs))))))
+    (swap! market-state (update-state* s'))))
 
 (defn start-consumers
   [num-consumers future-ch market-state]
