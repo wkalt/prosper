@@ -1,9 +1,7 @@
 **TODO**:
 
 ## immediate
-* move off puppetlabs code
 * tests
-* move all config handling to environ or get test profile working in tk config
 * investment reconciliation
 * input schema validation
 

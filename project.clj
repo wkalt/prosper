@@ -1,5 +1,4 @@
 (def ks-version "1.2.0")
-(def tk-version "1.2.0")
 
 (defproject prosper/prosper "0.2.1-SNAPSHOT"
   :description "FIXME: write description"
@@ -18,18 +17,14 @@
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [cheshire "5.3.1"]
                  [clj-http "2.0.0"]
-                 [org.clojure/tools.nrepl "0.2.3"]
-                 [puppetlabs/trapperkeeper ~tk-version]]
+                 [org.clojure/tools.nrepl "0.2.3"]]
 
-  :profiles {:dev {:dependencies [[puppetlabs/trapperkeeper ~tk-version :classifier "test" :scope "test"]
-                                  [puppetlabs/kitchensink ~ks-version :classifier "test" :scope "test"]
-                                  [javax.servlet/servlet-api "2.5"]
+  :profiles {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
                                   [ring-mock "0.1.5"]]}}
 
   :plugins [[environ/environ.lein "0.3.1"]]
   :hooks [environ.leiningen.hooks]
 
-  :aliases {"prosper" ["trampoline" "run" "--config" "dev-resources/config.conf"]}
-  :aot [puppetlabs.trapperkeeper.main]
+  :aliases {"prosper" ["trampoline" "run" "service"]}
 
-  :main puppetlabs.trapperkeeper.main)
+  :main prosper.service)
