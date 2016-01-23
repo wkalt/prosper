@@ -8,7 +8,7 @@
             [prosper.fields :refer [legacy-fields legacy->v1-conversions cb-fields]]
             [clojure.string :refer [lower-case]]
             [clojure.walk :refer [stringify-keys]]
-            [prosper.config :refer [*config*]]
+            [environ.core :refer [env]]
             [prosper.query :as q]))
 
 (defn rename-column
@@ -122,28 +122,27 @@
 (defn migrate!
   "Migrates database to the latest schema version. Does nothing if database is
    already at the latest schema version."
-  []
-  (let [db (:database *config*)]
-    (jdbcd/with-connection db
-      (if-let [unexpected (-> (applied-migrations db)
-                              (difference (set (keys migrations)))
-                              first)]
-        (-> "Your database contains an unrecognized migration numbered %s."
-            (format unexpected)
-            IllegalStateException.
-            throw))
+  [db]
+  (jdbcd/with-connection db
+    (if-let [unexpected (-> (applied-migrations db)
+                            (difference (set (keys migrations)))
+                            first)]
+      (-> "Your database contains an unrecognized migration numbered %s."
+          (format unexpected)
+          IllegalStateException.
+          throw))
 
-      (if-let [pending (seq (pending-migrations db))]
-        (jdbcd/transaction
-          (doseq [[version migration] pending]
-            (log/info (format "Applying database migration version %d" version))
-            (try
-              (migration)
-              (record-migration! version)
-              (catch java.sql.SQLException e
-                (log/error e "Caught SQLException during migration")
-                (let [next (.getNextException e)]
-                  (when-not (nil? next)
-                    (log/error next "Unravelled exception")))
-                (System/exit 1)))))
-        (log/info "There are no pending migrations")))))
+    (if-let [pending (seq (pending-migrations db))]
+      (jdbcd/transaction
+        (doseq [[version migration] pending]
+          (log/info (format "Applying database migration version %d" version))
+          (try
+            (migration)
+            (record-migration! version)
+            (catch java.sql.SQLException e
+              (log/error e "Caught SQLException during migration")
+              (let [next (.getNextException e)]
+                (when-not (nil? next)
+                  (log/error next "Unravelled exception")))
+              (System/exit 1)))))
+      (log/info "There are no pending migrations"))))

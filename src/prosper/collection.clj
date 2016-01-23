@@ -2,9 +2,8 @@
   (:require [prosper.query :as query]
             [clojure.tools.logging :as log]
             [clj-time.core :refer [now before?]]
+            [environ.core :refer [env]]
             [prosper.storage :refer [store-listings! release-end-time]]
-            [prosper.config :refer [*db* *release-rate* *base-rate*
-                                    *storage-threads*]]
             [clojure.core.async :as as]))
 
 (def market-state (atom {}))
@@ -14,10 +13,12 @@
   (before? (now) @release-end-time))
 
 (defn start-producer
-  [future-ch]
-  (as/thread (while true
-               (Thread/sleep (if (in-release?) *release-rate* *base-rate*))
-               (as/>!! future-ch (query/kit-get "search/listings?include_creditbureau_values=true")))))
+  [future-ch release-rate base-rate]
+  (as/thread
+    (while true
+      (Thread/sleep (if (in-release?) release-rate base-rate))
+      (as/>!! future-ch
+              (query/kit-get "search/listings?include_creditbureau_values=true")))))
 
 (defn log-deltas
   [deltas]
@@ -66,15 +67,15 @@
     (swap! market-state (update-state* s'))))
 
 (defn start-consumers
-  [num-consumers future-ch market-state]
+  [num-consumers future-ch market-state db]
   (dotimes [_ num-consumers]
     (as/thread (while true
                  (let [item (query/parse-body @(as/<!! future-ch))]
                    (update-state item market-state)
-                   (store-listings! *db* item))))))
+                   (store-listings! db item))))))
 
 (defn query-and-store
-  []
+  [db release-rate base-rate storage-threads]
   (let [future-ch (as/chan 40)]
-    (start-producer future-ch)
-    (start-consumers *storage-threads* future-ch market-state)))
+    (start-producer future-ch release-rate base-rate)
+    (start-consumers storage-threads future-ch market-state db)))

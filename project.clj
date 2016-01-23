@@ -1,6 +1,5 @@
 (def ks-version "1.2.0")
 (def tk-version "1.2.0")
-(def tk-jetty9-version "1.5.0")
 
 (defproject prosper/prosper "0.2.1-SNAPSHOT"
   :description "FIXME: write description"
@@ -20,8 +19,7 @@
                  [cheshire "5.3.1"]
                  [clj-http "2.0.0"]
                  [org.clojure/tools.nrepl "0.2.3"]
-                 [puppetlabs/trapperkeeper ~tk-version]
-                 [puppetlabs/trapperkeeper-webserver-jetty9 ~tk-jetty9-version]]
+                 [puppetlabs/trapperkeeper ~tk-version]]
 
   :profiles {:dev {:dependencies [[puppetlabs/trapperkeeper ~tk-version :classifier "test" :scope "test"]
                                   [puppetlabs/kitchensink ~ks-version :classifier "test" :scope "test"]

@@ -1,7 +1,6 @@
 (ns prosper.query
   (:require [clj-http.client :as http]
             [org.httpkit.client :as kit]
-            [environ.core :refer [env]]
             [clojure.tools.logging :as log]
             [cheshire.core :as json]))
 
@@ -26,13 +25,13 @@
   (swap! refresh-token (constantly (:refresh_token resp))))
 
 (defn request-access-token
-  []
+  [client-id client-secret username password]
   (try
     (let [params {:grant_type "password"
-                  :client_id (env :client-id)
-                  :client_secret (env :client-secret)
-                  :username (env :username)
-                  :password (env :pass)}
+                  :client_id client-id
+                  :client_secret client-secret
+                  :username username
+                  :password password}
           resp (-> (str base-url "security/oauth/token")
                    (http/post {:form-params params})
                    parse-body)]
@@ -43,11 +42,11 @@
         (format "Caught exception while requesting access token: %s" e)))))
 
 (defn refresh-access-token
-  []
+  [client-id client-secret username password]
   (try
     (let [params {:grant_type "refresh_token"
-                  :client_id (env :client-id)
-                  :client_secret (env :client-secret)
+                  :client_id client-id
+                  :client_secret client-secret
                   :refresh_token @refresh-token}
           resp (-> (str base-url "security/oauth/token")
                    (http/post {:form-params params :oauth-token @access-token})
@@ -57,7 +56,7 @@
     (catch Exception e
       (log/error
         "Caught exception while refreshing access token. Requesting new token.")
-      (request-access-token))))
+      (request-access-token client-id client-secret username password))))
 
 (defn kit-get
   ([endpoint]
