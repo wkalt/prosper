@@ -8,7 +8,6 @@
   :dependencies [[org.clojure/clojure "1.8.0-RC2"]
                  [environ "1.0.1"]
                  [silasdavis/at-at "1.2.0"]
-                 [compojure "1.4.0"]
                  [org.clojure/tools.logging "0.3.1"]
                  [org.clojure/java.jdbc "0.3.6"]
                  [org.postgresql/postgresql "9.4-1200-jdbc41"]
@@ -18,9 +17,6 @@
                  [cheshire "5.3.1"]
                  [clj-http "2.0.0"]
                  [org.clojure/tools.nrepl "0.2.3"]]
-
-  :profiles {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
-                                  [ring-mock "0.1.5"]]}}
 
   :plugins [[environ/environ.lein "0.3.1"]]
   :hooks [environ.leiningen.hooks]
