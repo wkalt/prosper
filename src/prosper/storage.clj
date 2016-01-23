@@ -38,21 +38,20 @@
     (catch Exception e
       (log/errorf "%s unravelled exception %s" e (.getNextException e)))))
 
-(defn create-event-rows
+(defn format-event-rows
+  "This can go once jdbc supports insert on conflict."
   [{:keys [amount_remaining amount_participation
            amount_funded listing_number last_updated_date]}]
-  ;; this needs to change when last_updated_date is available
   (format "(%s, '%s', %s, %s, %s)"
           listing_number
-          (to-timestamp (now))
+          last_updated_date
           amount_participation
           amount_remaining
           amount_funded))
 
 (defn store-events!
-  "This function is not done"
   [listings]
-  (update-events! (map create-event-rows listings)))
+  (update-events! (map format-event-rows listings)))
 
 (defn existing-entries
   [table column values db]
