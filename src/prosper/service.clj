@@ -8,7 +8,7 @@
             [clojure.tools.nrepl.server :refer [start-server stop-server]]
             [overtone.at-at :as atat]))
 
-(def *nrepl-session* (atom nil))
+(def nrepl-session (atom nil))
 
 (defn start-prosper-service
   [db release-rate base-rate storage-threads]
@@ -18,7 +18,7 @@
 (defn attach-nrepl-server
   [{:keys [enabled port] :as nrepl-config}]
   (if (and nrepl-config (true? enabled))
-    (swap! *nrepl-session* (fn [x] (start-server :port port)))))
+    (swap! nrepl-session (fn [x] (start-server :port port)))))
 
 (defn -main
   []
