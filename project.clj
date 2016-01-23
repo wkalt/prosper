@@ -16,7 +16,8 @@
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [cheshire "5.3.1"]
                  [clj-http "2.0.0"]
-                 [org.clojure/tools.nrepl "0.2.3"]]
+                 [org.clojure/tools.nrepl "0.2.3"]
+                 [ch.qos.logback/logback-classic "1.1.3"]]
 
   :plugins [[environ/environ.lein "0.3.1"]]
   :hooks [environ.leiningen.hooks]

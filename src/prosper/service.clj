@@ -29,10 +29,12 @@
                 storage-threads release-rate base-rate]} (env :prosper)
         nrepl-config (env :nrepl)
         refresh-token #(refresh-access-token
-                         client-id client-secret username password)]
+                         client-id client-secret username password)
+        token-refresh-interval (* 10 60 1000)]
     (log/info "Running migrations")
     (migrate/migrate! db)
     (request-access-token client-id client-secret username password)
-    (atat/every (* 10 60 1000) refresh-token cred-refresh-pool)
+    (atat/every token-refresh-interval refresh-token cred-refresh-pool
+                :initial-delay token-refresh-interval)
     (start-prosper-service db release-rate base-rate storage-threads)
     (attach-nrepl-server nrepl-config)))

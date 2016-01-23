@@ -4,20 +4,17 @@
             [clojure.tools.logging :as log]
             [cheshire.core :as json]))
 
-(def base-url "https://api.sandbox.prosper.com/v1/")
+(def base-url "https://api.prosper.com/v1/")
 
 (def access-token (atom nil))
 (def refresh-token (atom nil))
 
 (defn parse-body
-  [{:keys [status body error]}]
+  [{:keys [status body] :as resp}]
   (if (= 200 status)
     (let [body' (json/parse-string body true)]
-      (if-let [result (:result body')]
-        result
-        body'))
-    (log/errorf
-      "HTTP request received %s. Body is %s" status body)))
+      (or (:result body') body'))
+    (log/errorf "HTTP request received %s. Response is %s" status resp)))
 
 (defn update-tokens!
   [resp]
