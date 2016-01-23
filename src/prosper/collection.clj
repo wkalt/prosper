@@ -22,8 +22,7 @@
 
 (defn log-deltas
   [deltas]
-  (doseq [[listing {:keys [prosper_rating
-                           lender_yield amount_remaining]}] deltas]
+  (doseq [[listing {:keys [prosper_rating lender_yield amount_remaining]}] deltas]
     (log/infof "updating market state: %s: (%s / %s / %s)"
                listing prosper_rating lender_yield amount_remaining)))
 
@@ -37,14 +36,13 @@
   (assoc a :amount_remaining (- (:amount_remaining a) (:amount_remaining b))))
 
 (defn <-or-nil?
-  "returns true of a < b or b == nil"
   [a b]
   (if-let [amt (:amount_remaining b)]
     (< (:amount_remaining a) amt)
     true))
 
 (defn value-diffs
-  "extract only listings for which amountremaining has decreased"
+  "extract only listings for which amount_remaining has decreased"
   [old new-state]
   (let [new-values (->> new-state
                         (filter #(<-or-nil? (second %) (get old (first %))))
@@ -53,7 +51,7 @@
                            new-values (select-keys old (keys new-values)))]
     [new-values deltas]))
 
-(defn update-state*
+(defn update-state-fn
   [s']
   (fn [s]
     (let [[diffs deltas] (value-diffs s s')]
@@ -61,17 +59,17 @@
         (log-deltas deltas))
       (merge (select-keys s (keys s')) diffs))))
 
-(defn update-state
+(defn update-state!
   [new-listings market-state]
   (let [s' (reduce coalesce-state {} new-listings)]
-    (swap! market-state (update-state* s'))))
+    (swap! market-state (update-state-fn s'))))
 
 (defn start-consumers
   [num-consumers future-ch market-state db]
   (dotimes [_ num-consumers]
     (as/thread (while true
                  (let [item (query/parse-body @(as/<!! future-ch))]
-                   (update-state item market-state)
+                   (update-state! item market-state)
                    (store-listings! db item))))))
 
 (defn query-and-store

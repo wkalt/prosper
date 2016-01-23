@@ -64,7 +64,7 @@
   (log/debug "storing listings")
   (try
     (->> listings-to-store
-         (map #(select-keys % (conj (keys v1-fields) :listing_number)))
+         (map #(select-keys % (keys v1-fields)))
          (map update-time-fields)
          (apply (partial jdbcd/insert-records :listings)))
     (catch Exception e
@@ -73,27 +73,24 @@
 
 (defn store-listings!
   "must be called within a db connection"
-  ([db listings]
-   (store-listings! db listings true))
-  ([db listings store-events?]
-   (jdbcd/with-connection db
-     (jdbc/with-db-transaction [connection db]
-       (when-let [new-listings (seq (map :listing_number listings))]
-         (let [existing-listings (existing-entries "listings" "listing_number"
-                                                   new-listings db)
-               new-listing_numbers (set/difference (set new-listings)
-                                                   (set existing-listings))
-               listings-to-store (filter (comp new-listing_numbers :listing_number)
-                                         listings)]
-           (if (empty? listings-to-store)
-             (log/debug "no new listings")
-             (do
-               (reset! release-end-time (plus (now) (minutes 15)))
-               (store-listings listings-to-store)
-                 (log/info (format "stored %s new listings"
-                                   (count listings-to-store)))))
-           (when store-events?
-             (store-events! listings))))))))
+  [db listings]
+  (when-let [new-listings (seq (map :listing_number listings))]
+    (jdbcd/with-connection db
+      (jdbc/with-db-transaction [connection db]
+        (let [existing-listings (existing-entries "listings" "listing_number"
+                                                  new-listings db)
+              new-listing-numbers (set/difference (set new-listings)
+                                                  (set existing-listings))
+              listings-to-store (filter (comp new-listing-numbers :listing_number)
+                                        listings)]
+          (if (empty? listings-to-store)
+            (log/debug "no new listings")
+            (do
+              (reset! release-end-time (plus (now) (minutes 15)))
+              (store-listings listings-to-store)
+              (log/info (format "stored %s new listings"
+                                (count listings-to-store)))))
+          (store-events! listings))))))
 
 (defn parse-order-date
   [stamp]
