@@ -14,9 +14,11 @@
   [{:keys [status body error]}]
   (if (= 200 status)
     (let [body' (json/parse-string body true)]
-      (if (:result body') (:result body') body'))
+      (if-let [result (:result body')]
+        result
+        body'))
     (log/errorf
-      "HTTP request received %s. error is %s body is %s" status error body)))
+      "HTTP request received %s. Body is %s" status body)))
 
 (defn update-tokens!
   [resp]
@@ -25,16 +27,20 @@
 
 (defn request-access-token
   []
-  (let [params {:grant_type "password"
-                :client_id (env :client-id)
-                :client_secret (env :client-secret)
-                :username (env :username)
-                :password (env :pass)}
-        resp (-> (str base-url "security/oauth/token")
-                 (http/post {:form-params params})
-                 parse-body)]
-    (update-tokens! resp)
-    (log/infof "Received new access token: expires in %s" (:expires_in resp))))
+  (try
+    (let [params {:grant_type "password"
+                  :client_id (env :client-id)
+                  :client_secret (env :client-secret)
+                  :username (env :username)
+                  :password (env :pass)}
+          resp (-> (str base-url "security/oauth/token")
+                   (http/post {:form-params params})
+                   parse-body)]
+      (update-tokens! resp)
+      (log/infof "Received new access token: expires in %s" (:expires_in resp)))
+    (catch Exception e
+      (log/error
+        (format "Caught exception while requesting access token: %s" e)))))
 
 (defn refresh-access-token
   []
@@ -68,4 +74,4 @@
   (if (= 200 status)
     (json/parse-string body true)
     (log/errorf
-      "HTTP request received %s. error is %s body is %s" status error body)))
+      "HTTP request received %s. Body is %s" status body)))
