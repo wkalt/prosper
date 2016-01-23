@@ -21,6 +21,6 @@
   :plugins [[environ/environ.lein "0.3.1"]]
   :hooks [environ.leiningen.hooks]
 
-  :aliases {"prosper" ["trampoline" "run" "service"]}
+  :aliases {"prosper" ["trampoline" "run"]}
 
   :main prosper.service)
