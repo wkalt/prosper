@@ -17,9 +17,9 @@
     (log/errorf "HTTP request received %s. Response is %s" status resp)))
 
 (defn update-tokens!
-  [resp]
-  (swap! access-token (constantly (:access_token resp)))
-  (swap! refresh-token (constantly (:refresh_token resp))))
+  [{:keys [access_token refresh_token]}]
+  (swap! access-token (constantly access_token))
+  (swap! refresh-token (constantly refresh_token)))
 
 (defn request-access-token
   [client-id client-secret username password]

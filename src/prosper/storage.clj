@@ -20,16 +20,6 @@
   [listing]
   (mapvals to-timestamp (keys date-fields) listing))
 
-(defn insert-event-statement
-  [{:keys [listing_number timestamp amount_participation
-           amount_remaining amount_funded]}]
-  (format "(%s,'%s',%s,%s,%s)"
-          listing_number
-          timestamp
-          amount_participation
-          amount_remaining
-          amount_funded))
-
 (defn update-events!
   [events]
   (try
@@ -37,7 +27,7 @@
                  (listing_number, timestamp, amount_participation,
                  amount_remaining, amount_funded)
                  VALUES %s ON CONFLICT DO NOTHING"
-          n (->> (map insert-event-statement events)
+          n (->> events
                  (string/join ",")
                  (format query)
                  (jdbcd/do-commands)
@@ -48,20 +38,21 @@
     (catch Exception e
       (log/errorf "%s unravelled exception %s" e (.getNextException e)))))
 
-(defn munge-event
+(defn create-event-rows
   [{:keys [amount_remaining amount_participation
            amount_funded listing_number last_updated_date]}]
   ;; this needs to change when last_updated_date is available
-  {:timestamp (to-timestamp (now))
-   :amount_participation amount_participation
-   :amount_funded amount_funded
-   :amount_remaining amount_remaining
-   :listing_number listing_number})
+  (format "(%s, '%s', %s, %s, %s)"
+          listing_number
+          (to-timestamp (now))
+          amount_participation
+          amount_remaining
+          amount_funded))
 
 (defn store-events!
   "This function is not done"
   [listings]
-  (update-events! (map munge-event listings)))
+  (update-events! (map create-event-rows listings)))
 
 (defn existing-entries
   [table column values db]
