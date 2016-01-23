@@ -7,7 +7,7 @@
             [prosper.migrate :as migrate]
             [prosper.config :refer [load-config!]]
             [prosper.query :refer [request-access-token refresh-access-token]]
-            [puppetlabs.trapperkeeper.core :as trapperkeeper]
+            [puppetlabs.trapperkeeper.core :refer [defservice]]
             [overtone.at-at :as atat]
             [puppetlabs.trapperkeeper.services :as tk-services]))
 
@@ -21,7 +21,7 @@
     (future (collection/query-and-store))
     context))
 
-(trapperkeeper/defservice hello-web-service
+(defservice hello-web-service
   [[:ConfigService get-config]
    [:WebroutingService add-ring-handler get-route]]
   (start [this context]
