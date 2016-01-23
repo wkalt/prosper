@@ -15,10 +15,10 @@
 (defn start-producer
   [future-ch release-rate base-rate]
   (as/thread
-    (while true
-      (Thread/sleep (if (in-release?) release-rate base-rate))
-      (as/>!! future-ch
-              (query/kit-get "search/listings?include_creditbureau_values=true")))))
+    (let [listings-endpoint "search/listings?include_creditbureau_values=true"]
+      (while true
+        (Thread/sleep (if (in-release?) release-rate base-rate))
+        (as/>!! future-ch (query/kit-get listings-endpoint))))))
 
 (defn log-deltas
   [deltas]
