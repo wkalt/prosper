@@ -15,23 +15,32 @@
 ;; listings, so we're stuck with pulling them all. This can be refined if
 ;; support is ever added.
 
+(defn cached-count
+  [endpoint market-state base-url]
+  (let [market-count (count @market-state)]
+    (if (zero? market-count)
+      (query/get-count endpoint base-url)
+      market-count)))
+
 (defn fetch-listings
-  [endpoint base-url]
-  (let [total-count (query/get-count "search/listings?offset=10000" base-url)]
-    (for [offset (range 0 total-count 50)]
-      (query/kit-get (str endpoint "?sort_by=listing_number%20desc%20&limit=50&offset=" offset)
-                     base-url))))
+  [endpoint base-url market-state sleep-duration]
+  (let [cached-count (cached-count endpoint market-state base-url)]
+    (for [offset (range 0 cached-count 50)]
+      (do (Thread/sleep sleep-duration)
+          (query/kit-get (str endpoint "?sort_by=listing_number%20desc%20&limit=50&offset=" offset)
+                         base-url)))))
 
 (defn get-listings
   [listing-future]
-  (map :listingnumber (query/parse-body @listing-future)))
+  (map :listing_number (query/parse-body @listing-future)))
 
 (defn prune-market-state!
   [market-state endpoint base-url]
-  (let [available-listings (->> (fetch-listings endpoint base-url)
+  (let [available-listings (->> (fetch-listings endpoint base-url market-state 2000)
                                 (map get-listings)
                                 (apply concat))
         state-count (count @market-state)]
+    (println "available listings are" available-listings)
     (swap! market-state #(select-keys % available-listings))
     (let [state-count' (count @market-state)]
       (log/infof "Removed %s listings from market state."
@@ -42,13 +51,13 @@
   (before? (now) @release-end-time))
 
 (defn start-producer
-  [future-ch release-rate base-rate base-url]
+  [future-ch release-rate base-rate base-url market-state]
   (as/thread
     (let [listings-endpoint "search/listings?include_creditbureau_values=true"]
       (while true
-        (Thread/sleep (if (in-release?) release-rate base-rate))
-        (doseq [listing-future (fetch-listings listings-endpoint base-url)]
-          (as/>!! future-ch listing-future))))))
+        (let [sleep-duration (if (in-release?) release-rate (/ base-rate 7))]
+          (doseq [listing-future (fetch-listings listings-endpoint base-url market-state sleep-duration)]
+            (as/>!! future-ch listing-future)))))))
 
 (defn log-deltas
   [deltas]
@@ -99,5 +108,5 @@
 (defn query-and-store
   [db release-rate base-rate storage-threads base-url market-state]
   (let [future-ch (as/chan 40)]
-    (start-producer future-ch release-rate base-rate base-url)
+    (start-producer future-ch release-rate base-rate base-url market-state)
     (start-consumers storage-threads future-ch market-state db)))
