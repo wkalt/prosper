@@ -29,11 +29,9 @@
 
 (defn prune-market-state!
   [market-state endpoint base-url]
-  (let [listing-futures (fetch-listings endpoint base-url)
-        available-listings (->> listing-futures
+  (let [available-listings (->> (fetch-listings endpoint base-url)
                                 (map get-listings)
-                                (apply concat)
-                                set)
+                                (apply concat))
         state-count (count @market-state)]
     (swap! market-state #(select-keys % available-listings))
     (let [state-count' (count @market-state)]

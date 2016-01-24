@@ -2,14 +2,11 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.java.jdbc.deprecated :as jdbcd]
             [clj-time.core :refer [now]]
-            [clojure.set :refer [difference]]
             [clj-time.coerce :refer [to-timestamp]]
             [clojure.tools.logging :as log]
-            [prosper.fields :refer [legacy-fields legacy->v1-conversions cb-fields]]
+            [prosper.fields :refer [legacy-fields legacy->v1-conversions]]
             [clojure.string :refer [lower-case]]
-            [clojure.walk :refer [stringify-keys]]
-            [environ.core :refer [env]]
-            [prosper.query :as q]))
+            [clojure.walk :refer [stringify-keys]]))
 
 (defn rename-column
   [t [x y]]
@@ -119,7 +116,6 @@
                 (record-migration! version)
                 (catch java.sql.SQLException e
                   (log/error e "Caught SQLException during migration")
-                  (some-> (.getNextException e)
-                          (log/error "Unravelled exception"))
+                  (log/error (.getNextException e))
                   (System/exit 1)))))
           (log/info "There are no pending migrations"))))))
