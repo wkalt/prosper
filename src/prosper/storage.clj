@@ -97,7 +97,7 @@
   (to-timestamp
     (f/parse (f/formatter "yyyy-MM-dd HH:mm:ss Z") stamp)))
 
-(defn store-investment!
+(defn record-investment!
   [response db]
   (jdbcd/with-connection db
     (jdbc/with-db-transaction [connection db]

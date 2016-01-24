@@ -29,7 +29,8 @@
              :classname "org.postgresql.Driver")
         {:keys [client-id client-secret
                 username password
-                storage-threads release-rate base-rate base-url]} (env :prosper)
+                storage-threads release-rate base-rate base-url
+                actually-invest]} (env :prosper)
         nrepl-config (env :nrepl)
         market-state (atom {})
         refresh-token #(refresh-access-token
@@ -37,6 +38,8 @@
         prune-market #(collection/prune-market-state! market-state "search/listings" base-url)
         token-refresh-interval (* 10 60 1000)
         market-prune-interval (* 1000 60 30)]
+    (when actually-invest
+      (log/warn "Caution: real investment is ENABLED."))
     (migrate/migrate! db)
     (request-access-token client-id client-secret username password base-url)
     (atat/every token-refresh-interval refresh-token job-pool
