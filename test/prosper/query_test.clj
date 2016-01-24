@@ -6,7 +6,6 @@
 (deftest test-request-token
   []
   (let [{:keys [client-id client-secret username password base-url]} (env :prosper)
-        _ (println "BASE URL IS" base-url)
         _ (request-access-token client-id client-secret username password base-url)
         new-access-token @access-token]
     (is (= 200 (:status @(kit-get "search/listings" base-url))))

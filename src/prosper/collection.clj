@@ -7,9 +7,6 @@
             [prosper.storage :refer [store-listings! release-end-time]]
             [clojure.core.async :as as]))
 
-(def market-state (atom {}))
-; (def last-updated-date (atom nil))
-
 (defn string-max
   ([a] a)
   ([a b] (if (neg? (compare a b)) b a))
@@ -31,6 +28,23 @@
     (for [offset (range 0 total-count 50)]
       (query/kit-get (str endpoint "?sort_by=listing_number&limit=50&offset=" offset)
                      base-url))))
+
+(defn get-listings
+  [listing-future]
+  (map :listingnumber (query/parse-body @listing-future)))
+
+(defn prune-market-state!
+  [market-state endpoint base-url]
+  (let [listing-futures (fetch-listings endpoint base-url)
+        available-listings (->> listing-futures
+                                (map get-listings)
+                                (apply concat)
+                                set)
+        state-count (count @market-state)]
+    (swap! market-state #(select-keys % available-listings))
+    (let [state-count' (count @market-state)]
+      (log/infof "Removed %s listings from market state."
+                 (- state-count state-count')))))
 
 (defn in-release?
   []
@@ -94,7 +108,7 @@
                    (store-listings! db item))))))
 
 (defn query-and-store
-  [db release-rate base-rate storage-threads base-url]
+  [db release-rate base-rate storage-threads base-url market-state]
   (let [future-ch (as/chan 40)]
     (start-producer future-ch release-rate base-rate base-url)
     (start-consumers storage-threads future-ch market-state db)))
