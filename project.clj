@@ -1,8 +1,5 @@
 (defproject prosper/prosper "0.2.1-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
+  :description "Prosper service"
   :dependencies [[org.clojure/clojure "1.8.0-RC2"]
                  [com.cemerick/url "0.1.1"]
                  [environ "1.0.1"]
