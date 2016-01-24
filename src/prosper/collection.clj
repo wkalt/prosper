@@ -3,7 +3,6 @@
             [cemerick.url :refer [url-encode]]
             [clojure.tools.logging :as log]
             [clj-time.core :refer [now before?]]
-            [environ.core :refer [env]]
             [prosper.storage :refer [store-listings! release-end-time]]
             [clojure.core.async :as as]))
 

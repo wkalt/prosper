@@ -1,37 +1,29 @@
-{:dev {:env {:prosper {:username "my prosper username"
-                       :password "my prosper password"
-                       :client-id "my client id"
-                       :client-secret "my client secret"
-                       :release-rate 333
+{:dev {:env {:prosper {:username "prosper username"
+                       :password "prosper password"
+                       :client-id "clientid"
+                       :client-secret "client secret"
+                       :release-rate 333 ;; ms between requests. Rate limit is 20/sec.
                        :base-rate 6000
-                       :storage-threads 4
-                       :weekday-release ["9:00" "17:00"]
-                       :weekend-release ["12:00"]}
-             :database {:subprotocol "postgresql"
-                        :subname "//localhost:5434/prosper"
+                       :storage-threads 4 ;; queue processing/response storage
+                       :base-url "https://api.prosper.com/v1/"}
+             :database {:subname "//localhost:5434/prosper"
                         :user "prosper"
-                        :password "prosper"
-                        :classname "org.postgresql.Driver"}
-             :global {:logging-config "./dev-resources/logback-dev.xml"}
-             :nrepl {:enabled false
-                     :type "nrepl"
+                        :password "prosper"}
+             :nrepl {:enabled true
                      :port 9090 }}}
 
- :test {:env {:prosper {:username "my prosper username"
-                        :password "my prosper password"
-                        :client-id "my client id"
-                        :client-secret "my client secret"
+ ;; DO NOT put your production API credentials in this section. Obtain sandbox
+ ;; credentials to run the tests.
+ :test {:env {:prosper {:username "sandbox username"
+                        :password "sandbox password"
+                        :client-id "sandbox client-id"
+                        :client-secret "sandbox secret"
                         :release-rate 333
                         :base-rate 6000
                         :storage-threads 4
-                        :weekday-release ["9:00" "17:00"]
-                        :weekend-release ["12:00"]}
-              :database {:subprotocol "postgresql"
-                         :subname "//localhost:5434/prosper"
+                        :base-url "https://api.sandbox.prosper.com/v1/"}
+              :database {:subname "//localhost:5434/prosper"
                          :user "prosper"
-                         :password "prosper"
-                         :classname "org.postgresql.Driver"}
-              :global {:logging-config "./dev-resources/logback-dev.xml"}
-              :nrepl {:enabled false
-                      :type "nrepl"
+                         :password "prosper"}
+              :nrepl {:enabled true
                       :port 9090 }}}}

@@ -24,7 +24,9 @@
 (defn -main
   []
   (let [job-pool (atat/mk-pool)
-        db (env :database)
+        db (assoc (env :database)
+             :subprotocol "postgresql"
+             :classname "org.postgresql.Driver")
         {:keys [client-id client-secret
                 username password
                 storage-threads release-rate base-rate base-url]} (env :prosper)
