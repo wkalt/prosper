@@ -35,7 +35,6 @@
         prune-market #(collection/prune-market-state! market-state "search/listings" base-url)
         token-refresh-interval (* 10 60 1000)
         market-prune-interval (* 1000 60 30)]
-    (log/info "Running migrations")
     (migrate/migrate! db)
     (request-access-token client-id client-secret username password base-url)
     (atat/every token-refresh-interval refresh-token job-pool

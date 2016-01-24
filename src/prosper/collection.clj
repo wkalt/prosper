@@ -12,21 +12,15 @@
   ([a b] (if (neg? (compare a b)) b a))
   ([a b & more] (reduce string-max (string-max a b) more)))
 
-;; TODO: use this if prosper ever makes last_updated_date queryable
-;; (defn fetch-listings
-;;   [endpoint]
-;;   (if @last-updated-date
-;;     [(query/kit-get (str endpoint "?last_updated_date_min=" (url-encode @last-updated-date)))]
-;;     (let [total-count (query/get-count "search/listings?offset=10000")]
-;;       (for [offset (range 0 total-count 50)]
-;;         (do (Thread/sleep 100)
-;;             (query/kit-get (str endpoint "?sort_by=listing_number&limit=50&offset=" offset)))))))
+;; currently the v1 API does not provide a way to get the most recently updated
+;; listings, so we're stuck with pulling them all. This can be refined if
+;; support is ever added.
 
 (defn fetch-listings
   [endpoint base-url]
   (let [total-count (query/get-count "search/listings?offset=10000" base-url)]
     (for [offset (range 0 total-count 50)]
-      (query/kit-get (str endpoint "?sort_by=listing_number&limit=50&offset=" offset)
+      (query/kit-get (str endpoint "?sort_by=listing_number%20desc%20&limit=50&offset=" offset)
                      base-url))))
 
 (defn get-listings
@@ -94,8 +88,6 @@
 
 (defn update-state!
   [new-listings market-state]
-;  (swap! last-updated-date
-;         (fn [x] (apply string-max (cons x (map :last_updated_date new-listings)))))
   (let [s' (reduce coalesce-state {} new-listings)]
     (swap! market-state (update-state-fn s'))))
 

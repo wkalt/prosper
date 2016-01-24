@@ -83,66 +83,43 @@
     "create index investment_order_date_idx on investments(order_date)"))
 
 (def migrations
-  {1 initial-migration
-   2 migrate-to-v1-fields
-   3 drop-amountremaining
-   4 create-investments-table
-   })
+  [initial-migration
+   migrate-to-v1-fields
+   drop-amountremaining
+   create-investments-table])
 
 (defn record-migration!
   [migration]
-  {:pre [(integer? migration)]}
-  (jdbcd/do-prepared
-    "INSERT INTO migrations (migration, time) VALUES (?, ?)"
-    [migration (to-timestamp (now))]))
+  (jdbcd/insert-record :migrations {:migration migration
+                                    :time (to-timestamp (now))}))
 
 (defn applied-migrations
   [db]
-  {:post  [(sorted? %)
-           (set? %)
-           (apply < 0 %)]}
   (try
-    (let [query "SELECT migration FROM migrations ORDER BY migration"
-          results (jdbcd/transaction (jdbc/query db query))]
-      (apply sorted-set (map :migration results)))
+    (map :migration
+         (jdbc/query db "select migration from migrations order by migration"))
     (catch java.sql.SQLException e
-      (sorted-set))))
-
-(defn pending-migrations
-  [db]
-  {:post [(map? %)
-          (sorted? %)
-          (apply < 0 (keys %))
-          (<= (count %) (count migrations))]}
-  (try (let [pending (remove (applied-migrations db) (set (keys migrations)))]
-         (into (sorted-map)
-               (select-keys migrations pending)))
-       (catch Exception e (into (sorted-map) migrations))))
+      [])))
 
 (defn migrate!
-  "Migrates database to the latest schema version. Does nothing if database is
-   already at the latest schema version."
   [db]
   (jdbcd/with-connection db
-    (if-let [unexpected (-> (applied-migrations db)
-                            (difference (set (keys migrations)))
-                            first)]
-      (-> "Your database contains an unrecognized migration numbered %s."
-          (format unexpected)
-          IllegalStateException.
-          throw))
-
-    (if-let [pending (seq (pending-migrations db))]
-      (jdbcd/transaction
-        (doseq [[version migration] pending]
-          (log/info (format "Applying database migration version %d" version))
-          (try
-            (migration)
-            (record-migration! version)
-            (catch java.sql.SQLException e
-              (log/error e "Caught SQLException during migration")
-              (let [next (.getNextException e)]
-                (when-not (nil? next)
-                  (log/error next "Unravelled exception")))
-              (System/exit 1)))))
-      (log/info "There are no pending migrations"))))
+    (let [applied (applied-migrations db)
+          all-migrations (set (range (count migrations)))]
+      (if-let [unexpected (seq (remove all-migrations applied))]
+        (throw (IllegalStateException.
+                 (format "Your database contains an unrecognized migration numbered %s."
+                         unexpected)))
+        (if-let [pending (seq (drop (count applied) migrations))]
+          (jdbcd/transaction
+            (doseq [[version migration] (map-indexed vector pending)]
+              (log/infof "Applying database migration %s" version)
+              (try
+                (migration)
+                (record-migration! version)
+                (catch java.sql.SQLException e
+                  (log/error e "Caught SQLException during migration")
+                  (some-> (.getNextException e)
+                          (log/error "Unravelled exception"))
+                  (System/exit 1)))))
+          (log/info "There are no pending migrations"))))))
