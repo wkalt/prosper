@@ -11,9 +11,9 @@
 (def nrepl-session (atom nil))
 
 (defn start-prosper-service
-  [db release-rate base-rate storage-threads]
+  [db release-rate base-rate storage-threads base-url]
   (future
-    (collection/query-and-store db release-rate base-rate storage-threads)))
+    (collection/query-and-store db release-rate base-rate storage-threads base-url)))
 
 (defn attach-nrepl-server
   [{:keys [enabled port] :as nrepl-config}]
@@ -26,15 +26,15 @@
         db (env :database)
         {:keys [client-id client-secret
                 username password
-                storage-threads release-rate base-rate]} (env :prosper)
+                storage-threads release-rate base-rate base-url]} (env :prosper)
         nrepl-config (env :nrepl)
         refresh-token #(refresh-access-token
-                         client-id client-secret username password)
+                         client-id client-secret username password base-url)
         token-refresh-interval (* 10 60 1000)]
     (log/info "Running migrations")
     (migrate/migrate! db)
-    (request-access-token client-id client-secret username password)
+    (request-access-token client-id client-secret username password base-url)
     (atat/every token-refresh-interval refresh-token cred-refresh-pool
                 :initial-delay token-refresh-interval)
-    (start-prosper-service db release-rate base-rate storage-threads)
+    (start-prosper-service db release-rate base-rate storage-threads base-url)
     (attach-nrepl-server nrepl-config)))

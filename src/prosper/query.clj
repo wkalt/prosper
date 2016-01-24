@@ -22,7 +22,7 @@
   (swap! refresh-token (constantly refresh_token)))
 
 (defn request-access-token
-  [client-id client-secret username password]
+  [client-id client-secret username password base-url]
   (try
     (let [params {:grant_type "password"
                   :client_id client-id
@@ -39,7 +39,7 @@
         (format "Caught exception while requesting access token: %s" e)))))
 
 (defn refresh-access-token
-  [client-id client-secret username password]
+  [client-id client-secret username password base-url]
   (try
     (let [params {:grant_type "refresh_token"
                   :client_id client-id
@@ -53,14 +53,14 @@
     (catch Exception e
       (log/error
         "Caught exception while refreshing access token. Requesting new token.")
-      (request-access-token client-id client-secret username password))))
+      (request-access-token client-id client-secret username password base-url))))
 
 (defn kit-get
-  ([endpoint]
+  ([endpoint base-url]
    (kit/get (str base-url endpoint) {:accept :json :oauth-token @access-token})))
 
 (defn http-post
-  ([endpoint params]
+  ([endpoint base-url params]
    (http/post (str base-url endpoint)
               {:oauth-token @access-token :content-type :json
                :form-params params})))
@@ -71,3 +71,10 @@
     (json/parse-string body true)
     (log/errorf
       "HTTP request received %s. Body is %s" status body)))
+
+(defn get-count
+  [endpoint base-url]
+  (-> (http/get (str base-url endpoint) {:accept :json :oauth-token @access-token})
+      :body
+      (json/parse-string true)
+      :total_count))

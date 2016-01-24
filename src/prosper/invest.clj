@@ -9,11 +9,11 @@
 
 (defn invest!
   "invest bid-requests. Format should be [{:bid_amount amount :listing_id id}]"
-  [bid-requests]
+  [bid-requests base-url]
   (let [db (env :database)]
     (let [payload {:bid_requests bid-requests}
           resp (->> {:bid_requests bid-requests}
-                    (query/http-post "orders/")
+                    (query/http-post "orders/" base-url)
                     query/parse-post-body)
           {:keys [order_id order_date bid_requests]} resp
           total (reduce + (map :bid_amount bid_requests))]
