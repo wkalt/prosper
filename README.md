@@ -3,7 +3,8 @@
 A service for investment and activity monitoring on the Prosper.com P2P lending
 marketplace. Investment functions are not suitable for your money. This is
 under sporadic development and may never be completed. _Hooking it up to an
-account with money or API investment enabled is a very bad idea._
+account with money or API investment enabled is a very bad idea. I disclaim
+responsibility for any investments this application makes on your behalf._
 
 ## Current functionality
 
