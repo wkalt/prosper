@@ -44,7 +44,7 @@
            amount_funded listing_number last_updated_date]}]
   (format "(%s, '%s', %s, %s, %s)"
           listing_number
-          last_updated_date
+          (to-timestamp (now))
           amount_participation
           amount_remaining
           amount_funded))

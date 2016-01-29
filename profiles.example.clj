@@ -21,6 +21,7 @@
                         :release-rate 333
                         :base-rate 6000
                         :storage-threads 4
+                        ;; DO NOT change the base-url
                         :base-url "https://api.sandbox.prosper.com/v1/"}
               :database {:subname "//localhost:5434/prosper"
                          :user "prosper"
