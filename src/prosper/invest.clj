@@ -21,9 +21,3 @@
         (catch Exception e
           (log/errorf "Caught exception while posting investment! Exception: %s" e)))
       (log/infof "FAKE Submitted order for %s at %s" total (now)))))
-
-(invest! [{:bid_amount 20 :listing_id 989356}]
-         "https://api.sandbox.prosper.com/v1/"
-         (assoc (env :database)
-           :subprotocol "postgresql"
-           :classname "org.postgresql.Driver"))
