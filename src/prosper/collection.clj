@@ -23,12 +23,12 @@
       market-count)))
 
 (defn fetch-listings
-  [endpoint base-url market-state sleep-duration]
+  [endpoint base-url market-state]
   (let [cached-count (cached-count endpoint market-state base-url)]
     (for [offset (range 0 cached-count 50)]
-      (do (Thread/sleep sleep-duration)
-          (query/kit-get (str endpoint "?sort_by=listing_number%20desc%20&limit=50&offset=" offset)
-                         base-url)))))
+      (query/kit-get
+        (str endpoint "?sort_by=listing_number%20desc%20&limit=50&offset=" offset)
+        base-url))))
 
 (defn get-listings
   [listing-future]
@@ -36,15 +36,13 @@
 
 (defn prune-market-state!
   [market-state endpoint base-url]
-  (let [available-listings (->> (fetch-listings endpoint base-url market-state 2000)
+  (let [available-listings (->> (fetch-listings endpoint base-url market-state)
                                 (map get-listings)
                                 (apply concat))
         state-count (count @market-state)]
-    (println "available listings are" available-listings)
     (swap! market-state #(select-keys % available-listings))
-    (let [state-count' (count @market-state)]
-      (log/infof "Removed %s listings from market state."
-                 (- state-count state-count')))))
+    (log/infof "Removed %s listings from market state."
+               (- state-count (count @market-state)))))
 
 (defn in-release?
   []
@@ -56,8 +54,9 @@
     (let [listings-endpoint "search/listings?include_creditbureau_values=true"]
       (while true
         (let [sleep-duration (if (in-release?) release-rate (/ base-rate 7))]
-          (doseq [listing-future (fetch-listings listings-endpoint base-url market-state sleep-duration)]
-            (as/>!! future-ch listing-future)))))))
+          (doseq [listing-future (fetch-listings listings-endpoint base-url market-state)]
+            (as/>!! future-ch listing-future)
+            (Thread/sleep sleep-duration)))))))
 
 (defn log-deltas
   [deltas]

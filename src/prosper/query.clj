@@ -2,6 +2,7 @@
   (:require [clj-http.client :as http]
             [org.httpkit.client :as kit]
             [clojure.tools.logging :as log]
+            [throttler.core :refer [throttle-fn]]
             [cheshire.core :as json]))
 
 (def base-url "https://api.prosper.com/v1/")
@@ -55,15 +56,17 @@
         "Caught exception while refreshing access token. Requesting new token.")
       (request-access-token client-id client-secret username password base-url))))
 
-(defn kit-get
-  ([endpoint base-url]
-   (kit/get (str base-url endpoint) {:accept :json :oauth-token @access-token})))
+(defn kit-get*
+  [endpoint base-url]
+  (kit/get (str base-url endpoint) {:accept :json :oauth-token @access-token}))
+
+(def kit-get (throttle-fn kit-get* 16 :second))
 
 (defn http-post
   ([endpoint base-url params]
-   (http/post (str base-url endpoint)
-              {:oauth-token @access-token :content-type :json
-               :form-params params})))
+   (kit/post (str base-url endpoint)
+             {:oauth-token @access-token :content-type :json
+              :form-params params})))
 
 (defn parse-post-body
   [{:keys [status body error]}]
