@@ -30,14 +30,18 @@ Investment functionality is in an incomplete state and insufficiently tested.
 ## Running it
 
 1. Create a Postgres user and database for the application:
+```
     psql -c 'create role prosper with login'
     psql -c 'create database prosper owner prosper'
+```
 
 2. Copy profiles.example.clj to profiles.clj and resources/logback-example.xml
    to resources/logback.xml, and modify both to your needs.
 
 3. Run the application with leiningen:
+```
     lein prosper
+```
 
 ## Tests
 
